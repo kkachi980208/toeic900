@@ -165,7 +165,7 @@ async function loadStatic(){
 async function connectDb(){
  let c=null;
  try{c=window.claude&&window.claude.use?await window.claude.use("db"):null}catch(e){c=null}
- if(!c){dbState="이 기기에만 저장 중 — 설정에서 기기 간 동기화를 연결하세요";await loadStatic();await ghInit();renderSync();return}
+ if(!c){dbState="이 기기에만 저장 중 — 설정 → 기기 간 동기화를 연결하세요";await loadStatic();await ghInit();renderSync();return}
  DB=c;let late=setTimeout(()=>{dbState="클라우드 응답 지연 — 기기에 먼저 저장 중";renderSync()},10000);
  try{
   const snap=await DB.doc("progress/state").get();clearTimeout(late);
@@ -507,7 +507,7 @@ function renderSet(){
    <div class="row"><button class="btn small" id="ghOn">연결</button><span class="note" id="ghMsg"></span></div>
    <p class="note" style="margin:0">처음 한 번: <a href="https://github.com/new?name=toeic900-data&visibility=private&description=TOEIC%20900%20study%20record" target="_blank" rel="noopener">① 비공개 저장소 만들기</a> → <a href="https://github.com/settings/personal-access-tokens/new?name=toeic900-sync&description=TOEIC%20900%20sync&target_name=kkachi980208&expires_in=365&contents=write" target="_blank" rel="noopener">② 토큰 만들기</a> (Repository access에서 toeic900-data만 선택) → 토큰을 위 칸에 붙여넣고 연결.</p>
    <p class="note" style="margin:0">토큰은 이 기기 브라우저에만 보관되고 화면에 다시 표시되지 않습니다. 다른 기기용으로 메모장 등에 보관하세요.</p>`}</div>`:""}
- <div class="card"><h2>저장 상태</h2><p style="margin:0" id="syncState">${esc(dbState)}</p><p class="note" style="margin:0">클라우드 저장이 연결되면 다른 기기에서도 이어지고, 매일 자동 개선 작업이 이 기록을 읽어 새 문제를 추가합니다.</p></div>
+ ${window.claude?`<div class="card"><h2>저장 상태</h2><p style="margin:0" id="syncState">${esc(dbState)}</p><p class="note" style="margin:0">클라우드 저장이 연결되면 다른 기기에서도 이어지고, 매일 자동 개선 작업이 이 기록을 읽어 새 문제를 추가합니다.</p></div>`:""}
  <div class="card"><div class="row" style="justify-content:space-between"><h2>자가 점검</h2><button class="btn small" id="chkRun">다시 점검</button></div>
   <ul class="alog"><li>문제 은행: 문법 ${h.bank.grammar} · 듣기 ${h.bank.lc} · 독해 ${h.bank.rc} (자동 추가 ${h.bank.extra})</li><li>제외된 손상 문제: ${h.bank.broken}개</li><li>자동 복구한 기록: ${h.fixed}건</li><li>점검 시각: ${new Date(h.ts).toLocaleString("ko-KR")} · 버전 ${esc(h.ver)}</li></ul>
   ${h.issues.length?`<div class="explain bad"><b>발견된 문제</b><ul class="trap">${h.issues.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:`<div class="explain"><b>이상 없음</b> 문제·기록 모두 정상</div>`}</div>
