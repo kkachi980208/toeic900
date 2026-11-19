@@ -14,5 +14,6 @@ cd "$(dirname "$0")"
   echo "</script>"
   cat src/site_tail.html
 } > index.html
-sed -n '/^<script>$/,/^<\/script>$/p' index.html | sed '1d;$d' | head -n -0 > /tmp/_check.js
-node --check /tmp/_check.js 2>/dev/null && echo "BUILD OK" || echo "주의: node 없음 또는 문법 오류 — 확인 필요"
+# 앱 스크립트(첫 번째 <script> 블록)만 꺼내 문법 검사
+awk '/^<script>$/{f++; if(f==1){on=1; next}} on&&/^<\/script>$/{exit} on' index.html > /tmp/_check.js
+node --check /tmp/_check.js && echo "BUILD OK"
