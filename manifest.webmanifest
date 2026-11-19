@@ -1,0 +1,16 @@
+{
+  "name": "토익 900 데일리",
+  "short_name": "토익900",
+  "description": "S·V·C·O·M 노트 기반 토익 학습 — 약점 분석과 자동 복습",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f7f9",
+  "theme_color": "#cf2f62",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
