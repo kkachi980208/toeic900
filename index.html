@@ -773,7 +773,7 @@ function selfCheck(){
 /* ===================== 저장 (기기 + 클라우드) ===================== */
 let DB=null,dbState="연결 확인 중",dbBusy=false,dbDirty=false,dbTimer=null,UPD=[];
 function saveLocal(){if(!LOCAL_OK)return;try{localStorage.setItem(KEY2,JSON.stringify(S))}catch(e){}}
-function save(){S.updatedAt=Date.now();saveLocal();queueDb()}
+function save(){S.updatedAt=Date.now();saveLocal();queueDb();queueGh()}
 function queueDb(){if(!DB)return;dbDirty=true;clearTimeout(dbTimer);dbTimer=setTimeout(flushDb,1500)}
 async function flushDb(){
  if(!DB||!dbDirty)return;if(dbBusy){dbTimer=setTimeout(flushDb,800);return}
@@ -784,7 +784,74 @@ async function flushDb(){
  finally{dbBusy=false;renderSync()}
  if(dbDirty&&!dbTimer)flushDb();
 }
-function renderSync(){const f=$("#syncFoot");if(f)f.textContent="저장: "+dbState;const s=$("#syncState");if(s)s.textContent=dbState}
+function renderSync(){const t=GH?ghState:dbState;const f=$("#syncFoot");if(f)f.textContent="저장: "+t;const s=$("#syncState");if(s)s.textContent=t}
+/* ===================== 기기 간 동기화 (GitHub 비공개 저장소) ===================== */
+const GH_KEY="toeic900-gh";
+let GH=null,ghSha=null,ghBusy=false,ghDirty=false,ghTimer=null,ghState="",ghLast=0;
+try{GH=JSON.parse(localStorage.getItem(GH_KEY)||"null")}catch(e){GH=null}
+const b64e=t=>{const by=new TextEncoder().encode(t);let s="";for(let i=0;i<by.length;i+=8192)s+=String.fromCharCode.apply(null,by.subarray(i,i+8192));return btoa(s)};
+const b64d=b=>new TextDecoder().decode(Uint8Array.from(atob(String(b).replace(/\s/g,"")),c=>c.charCodeAt(0)));
+async function ghReq(method,body){
+ const url="https://api.github.com/repos/"+encodeURIComponent(GH.owner)+"/"+encodeURIComponent(GH.repo)+"/contents/"+GH.path;
+ return fetch(url,{method,cache:"no-store",headers:{"Authorization":"Bearer "+GH.token,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"},body:body?JSON.stringify(body):undefined});
+}
+async function ghPull(){
+ const r=await ghReq("GET");
+ if(r.status===404){ghSha=null;return {none:true}}
+ if(r.status===401||r.status===403)throw {code:"auth"};
+ if(!r.ok)throw {code:"http "+r.status};
+ const j=await r.json();ghSha=j.sha;
+ let txt=j.content?b64d(j.content):"";
+ if(!txt&&j.download_url){const r2=await fetch(j.download_url,{cache:"no-store",headers:{"Authorization":"Bearer "+GH.token}});txt=await r2.text()}
+ return {state:JSON.parse(txt)};
+}
+function mergeStates(a,b){
+ const [n,o]=(a.updatedAt||0)>=(b.updatedAt||0)?[a,b]:[b,a];
+ const m=normalize(JSON.parse(JSON.stringify(n)));const O=normalize(JSON.parse(JSON.stringify(o)));
+ const lk=x=>x.t+"|"+x.id+"|"+(x.rt||0),L=new Map();
+ O.log.concat(m.log).forEach(x=>{if(x&&x.t)L.set(lk(x),Object.assign({},L.get(lk(x))||{},x))});
+ m.log=[...L.values()].sort((x,y)=>x.t-y.t).slice(-400);
+ Object.entries(O.qs).forEach(([id,v])=>{const w=m.qs[id];if(!w||(v.n||0)>(w.n||0))m.qs[id]=v});
+ Object.entries(O.days).forEach(([d,v])=>{const w=m.days[d];if(!w||(v.n||0)>(w.n||0)||((v.n||0)===(w.n||0)&&(v.ss||0)>(w.ss||0)))m.days[d]=v});
+ Object.entries(O.wd).forEach(([k,v])=>{if(!m.wd[k])m.wd[k]=v});
+ m.unk=[...new Set(O.unk.concat(m.unk))];
+ const uni=(x,y,f)=>{const M=new Map();x.concat(y).forEach(e=>M.set(f(e),e));return [...M.values()]};
+ m.adapt=uni(O.adapt,m.adapt,e=>e.d+"|"+e.m).sort((x,y)=>String(x.d).localeCompare(String(y.d))).slice(-60);
+ m.mocks=uni(O.mocks,m.mocks,e=>JSON.stringify(e));
+ m.scores=uni(O.scores,m.scores,e=>e.d+"|"+e.lc+"|"+e.rc).sort((x,y)=>x.d<y.d?-1:1);
+ m.wpos=Math.max(O.wpos||0,m.wpos||0);
+ m.updatedAt=Math.max(a.updatedAt||0,b.updatedAt||0);
+ return m;
+}
+function ghSetState(t){ghState=t;renderSync()}
+async function ghSyncNow(){
+ if(!GH)return;if(ghBusy){ghDirty=true;return}
+ ghBusy=true;ghDirty=false;clearTimeout(ghTimer);ghTimer=null;
+ try{
+  ghSetState("동기화 중…");
+  const remote=await ghPull();
+  if(remote.state){const before=JSON.stringify(S);S=mergeStates(S,remote.state);if(JSON.stringify(S)!==before){selfCheck();saveLocal();renderAll()}}
+  const same=remote.state&&JSON.stringify(remote.state)===JSON.stringify(S);
+  if(!same){
+   let put=await ghReq("PUT",{message:"학습 기록 "+TODAY,content:b64e(JSON.stringify(S)),sha:ghSha||undefined});
+   if(put.status===409||put.status===422){const again=await ghPull();if(again.state){S=mergeStates(S,again.state);saveLocal()}put=await ghReq("PUT",{message:"학습 기록 "+TODAY,content:b64e(JSON.stringify(S)),sha:ghSha||undefined})}
+   if(put.status===401||put.status===403)throw {code:"auth"};
+   if(!put.ok)throw {code:"http "+put.status};
+   const j=await put.json();ghSha=j.content&&j.content.sha;
+  }
+  ghLast=Date.now();ghSetState("모든 기기 동기화됨 "+new Date().toTimeString().slice(0,5));
+ }catch(e){
+  const c=e&&e.code;
+  ghSetState(c==="auth"?"동기화 실패: 토큰이 틀렸거나 만료됨 — 설정에서 다시 연결":navigator.onLine===false?"오프라인 — 연결되면 자동 동기화":"동기화 실패 ("+(c||"네트워크")+") — 이 기기에는 저장됨");
+  if(c!=="auth")ghDirty=true;
+ }finally{ghBusy=false;if(ghDirty&&!ghTimer)ghTimer=setTimeout(ghSyncNow,20000)}
+}
+function queueGh(){if(!GH)return;ghDirty=true;clearTimeout(ghTimer);ghTimer=setTimeout(ghSyncNow,15000)}
+function ghFlush(){if(GH&&(ghDirty||ghTimer))ghSyncNow()}
+async function ghInit(){if(!GH){renderSync();return}await ghSyncNow()}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")ghFlush();else if(GH&&Date.now()-ghLast>60000)ghSyncNow()});
+addEventListener("online",()=>{if(GH)ghSyncNow()});
+
 async function loadStatic(){
  /* 독립 사이트: 같은 폴더의 bank.json(추가 문제)·updates.json(개선 기록)을 읽는다. 없으면 무시. */
  if(!/^https?:$/.test(location.protocol))return;
@@ -795,7 +862,7 @@ async function loadStatic(){
 async function connectDb(){
  let c=null;
  try{c=window.claude&&window.claude.use?await window.claude.use("db"):null}catch(e){c=null}
- if(!c){dbState="이 기기에 저장 (다른 기기로 옮길 땐 설정 → 백업·복원)";await loadStatic();renderSync();return}
+ if(!c){dbState="이 기기에만 저장 중 — 설정에서 기기 간 동기화를 연결하세요";await loadStatic();await ghInit();renderSync();return}
  DB=c;let late=setTimeout(()=>{dbState="클라우드 응답 지연 — 기기에 먼저 저장 중";renderSync()},10000);
  try{
   const snap=await DB.doc("progress/state").get();clearTimeout(late);
@@ -1034,7 +1101,7 @@ function finishRun(){
  const c=S.cur;if(c.finished)return;c.finished=1;
  const d=S.days[TODAY]=S.days[TODAY]||{n:0,c:0,ms:0,ss:0,sec:0};d.ss++;d.sec+=Math.round((Date.now()-c.t0)/1000);
  if(c.kind==="daily")S.wpos=c.wpos;
- const r=refreshPlan();c.msgs=r.msgs;
+ const r=refreshPlan();c.msgs=r.msgs;setTimeout(()=>ghFlush(),300);
 }
 function resultHTML(){
  const c=S.cur;const first=c.items.map((it,i)=>({it,i,q:BYID[it.id]})).filter(x=>!x.it.rt&&c.ans[x.i]!=null);
@@ -1127,6 +1194,15 @@ function renderStrat(){
 function renderSet(){
  const h=S.health||selfCheck();
  $("#v-set").innerHTML=`
+ ${typeof window.claude==="undefined"||!window.claude?`<div class="card"><h2>기기 간 동기화</h2>
+  ${GH?`<p style="margin:0"><b>연결됨</b> · ${esc(GH.owner)}/${esc(GH.repo)}</p><p class="note" style="margin:0" id="ghStat">${esc(ghState)}</p>
+   <div class="row"><button class="btn small" id="ghNow">지금 동기화</button><button class="btn small ghost" id="ghOff">이 기기 연결 해제</button></div>`
+  :`<p class="note" style="margin:0">기록을 비공개 GitHub 저장소에 저장해 PC·휴대폰 어디서든 같은 기록으로 이어 풉니다. 기기마다 한 번만 입력하면 됩니다.</p>
+   <div class="setrow"><label for="ghOwner">GitHub 아이디</label><input id="ghOwner" value="kkachi980208" autocomplete="off"></div>
+   <div class="setrow"><label for="ghRepo">기록 저장소</label><input id="ghRepo" value="toeic900-data" autocomplete="off"></div>
+   <div class="setrow"><label for="ghTok">토큰</label><input id="ghTok" type="password" placeholder="github_pat_…" autocomplete="off"></div>
+   <div class="row"><button class="btn small" id="ghOn">연결</button><span class="note" id="ghMsg"></span></div>
+   <p class="note" style="margin:0">토큰은 이 기기 브라우저에만 보관되고 화면에 다시 표시되지 않습니다.</p>`}</div>`:""}
  <div class="card"><h2>저장 상태</h2><p style="margin:0" id="syncState">${esc(dbState)}</p><p class="note" style="margin:0">클라우드 저장이 연결되면 다른 기기에서도 이어지고, 매일 자동 개선 작업이 이 기록을 읽어 새 문제를 추가합니다.</p></div>
  <div class="card"><div class="row" style="justify-content:space-between"><h2>자가 점검</h2><button class="btn small" id="chkRun">다시 점검</button></div>
   <ul class="alog"><li>문제 은행: 문법 ${h.bank.grammar} · 듣기 ${h.bank.lc} · 독해 ${h.bank.rc} (자동 추가 ${h.bank.extra})</li><li>제외된 손상 문제: ${h.bank.broken}개</li><li>자동 복구한 기록: ${h.fixed}건</li><li>점검 시각: ${new Date(h.ts).toLocaleString("ko-KR")} · 버전 ${esc(h.ver)}</li></ul>
@@ -1146,6 +1222,15 @@ function renderSet(){
 $("#v-set").addEventListener("click",async e=>{
  const b=e.target.closest("button");if(!b)return;
  if(b.id==="chkRun"){selfCheck();save();renderSet();return}
+ if(b.id==="ghOn"){const owner=$("#ghOwner").value.trim(),repo=$("#ghRepo").value.trim(),token=$("#ghTok").value.trim();
+  if(!owner||!repo||!token){$("#ghMsg").textContent="세 칸을 모두 입력하세요";return}
+  GH={owner,repo,token,path:"progress.json"};$("#ghMsg").textContent="연결 확인 중…";
+  try{await ghPull()}catch(x){GH=null;$("#ghMsg").textContent=x&&x.code==="auth"?"토큰 권한 오류: 저장소 선택·Contents 읽기/쓰기 권한을 확인하세요":"저장소에 연결하지 못했습니다 ("+(x&&x.code||"네트워크")+")";return}
+  try{localStorage.setItem(GH_KEY,JSON.stringify(GH))}catch(x){}
+  await ghSyncNow();renderSet();return}
+ if(b.id==="ghNow"){await ghSyncNow();renderSet();return}
+ if(b.id==="ghOff"){if(b.dataset.sure!=="1"){b.dataset.sure="1";b.textContent="연결 해제 (기록은 이 기기와 저장소에 남음)";return}
+  GH=null;try{localStorage.removeItem(GH_KEY)}catch(x){}ghSetState("");renderSet();renderSync();return}
  const seg=b.closest(".seg");
  if(seg&&seg.id==="setSize"){S.settings.size=+b.dataset.v;save();renderSet();return}
  if(seg&&seg.id==="setSlot"){S.settings.slot=b.dataset.v;refreshPlan();save();renderSet();return}
