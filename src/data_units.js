@@ -1,5 +1,5 @@
 /* ===== 단원 노트 (사용자 노트 기반 · 오류 수정 표시) ===== */
-const GROUPS=[["뼈대","문장 구조와 동사"],["품사","명사·대명사·형용사·부사"],["연결","전치사·접속사·명사절·관계사"],["구문","비교·준동사"],["추가","노트 밖 빈출"]];
+const GROUPS=[["Section 1 문장 패턴","주어·동사·목적어·보어·수식어"],["Section 2 동사구","동사 형태·수일치·태·시제·가정법"],["Section 3 준동사구","to부정사·동명사·분사"],["Section 4 품사","명사·대명사·형용사·부사·전치사"],["Section 5 접속사와 절","등위·상관접속사·관계절·부사절·명사절"],["Section 6 특수 구문","비교·병치·도치"],["Vocabulary 어휘","짝 표현·유사 의미어 (단어 탭과 연결)"]];
 const SLOTS=[["S","주어"],["V","동사"],["O","목적어"],["C","보어"],["M","수식어"],["J","연결어"]];
 const UNITS=[
 {id:"u0",g:0,n:"문장 구조 S·V·C·O·M",
@@ -97,10 +97,21 @@ const UNITS=[
  sec:[{h:"짝으로 나오는 표현",rows:[["comply with","준수하다",""],["be responsible for","담당하다",""],["be eligible for","자격이 있다",""],["take effect","시행되다 (take place = 열리다)",""],["in advance","미리",""],["on time / in time","정각에 / 늦지 않게",""],["so + 형용사 + that","너무 ~해서 ~하다 (such + a + 명사)",""],["increase by + 수치","~만큼 증가",""]]}],
  exam:"뜻이 비슷한 단어 4개 → 빈칸 앞뒤 단어와 짝이 맞는 것부터. 모르면 10초 안에 찍고 넘어간다.",
  trap:["take place / take effect","so / such"],fix:[]},
-{id:"u16",g:4,n:"가정법·도치",
+{id:"u16",g:4,n:"가정법",
  sec:[{h:"공식",rows:[["Should + 주어 + V, 명령문","혹시 ~하면 (토익 최다)","Should you have questions, call us."],["If + 과거, would + V","현재 반대",""],["If + had p.p., would have p.p.","과거 반대",""],["Had + 주어 + p.p.","If 생략 도치",""]]}],
- exam:"주절에 would have p.p. → Had / 빈칸 뒤 동사원형 + 명령문 → Should.",trap:["If 자리에 Had·Should 구분"],fix:[]}
+ exam:"주절에 would have p.p. → Had / 빈칸 뒤 동사원형 + 명령문 → Should.",trap:["If 자리에 Had·Should 구분"],fix:[]},
+{id:"u17",g:5,n:"병치·도치",
+ sec:[{h:"병치 = and·or·but 앞뒤는 같은 모양",rows:[["등위접속사 앞뒤 품사·형태 일치","명사-명사, 형용사-형용사, 동사원형-동사원형","fast and reliable"],["상관접속사도 A·B 형태 일치","both A and B / not only A but also B / either A or B","both quickly and accurately"],["비교 대상 일치","than 뒤에 that of / those of로 같은 대상 비교","higher than that of last year"]]},
+  {h:"도치 = 강조어가 맨 앞에 오면 어순이 바뀜",rows:[["부정어가 맨 앞 → 조동사 + 주어","Never / Rarely / Hardly / Seldom","Rarely does the office close early."],["Only + 부사(구·절)가 맨 앞 → 조동사 + 주어","Only after ~ did/was/can + 주어","Only after the meeting did he call."],["보어가 맨 앞 → be동사 + 주어","Attached / Enclosed / Included is(are) + 주어","Enclosed is a copy of the invoice."],["So / Neither + 조동사 + 주어","나도 그렇다 / 나도 아니다","So does Ms. Kim."]]}],
+ exam:"빈칸 앞뒤에 and·or·but이 있으면 반대편 단어의 품사·형태를 그대로 따른다. 문장 맨 앞이 Never·Rarely·Only·Enclosed면 뒤 어순(조동사·be + 주어)을 확인한다.",
+ trap:["and 뒤를 앞과 다른 품사로 고르기","Enclosed is/are는 뒤에 오는 진짜 주어에 수 일치","도치 문장에서 주어 수(단수/복수)로 does/do, was/were 결정"],fix:[]}
 ];
+
+/* RC 기본서 Section 순서로 정렬 (단원 id는 유지) */
+const RC_ORDER=["u0","u1","u2","u3","u4","u16","u14","u5","u6","u7","u8","u9","u10","u12","u11","u13","u17","u15"];
+const RC_G={u0:0,u1:0,u2:1,u3:1,u4:1,u16:1,u14:2,u5:3,u6:3,u7:3,u8:3,u9:3,u10:4,u12:4,u11:4,u13:5,u17:5,u15:6};
+UNITS.sort((a,b)=>RC_ORDER.indexOf(a.id)-RC_ORDER.indexOf(b.id));
+UNITS.forEach(u=>{u.g=RC_G[u.id]});
 
 /* 자리 태그: 기존 문제 */
 const SLOT_OLD={a0:"V",a1:"M",a2:"J",a3:"V",a4:"V",a5:"V",a6:"O",a7:"O",a8:"M",a9:"J",a10:"J",a11:"J",a12:"C",a13:"O",a14:"J",a15:"O",a16:"V",a17:"M",a18:"C",a19:"J",a20:"J",a21:"J",a22:"M",a23:"M",a24:"J",
@@ -166,5 +177,11 @@ const NEWQ=[
 {id:"n11-7",u:"u11",r:"J",s:"The survey shows ____ customers prefer online shopping.",c:["that","what","which","whose"],a:0,e:"뒤 완전 → that."},
 {id:"n11-8",u:"u11",r:"J",s:"We discussed ____ we could reduce shipping costs.",c:["how","what","which","whom"],a:0,e:"뒤 완전 + 방법 → how."},
 {id:"n12-1",u:"u12",r:"J",s:"This is the factory ____ our new dampers are produced.",c:["which","where","what","whose"],a:1,e:"뒤 완전(수동문) + 장소 선행사 → where."},
-{id:"n12-2",u:"u12",r:"J",s:"The supplier ____ we ordered the parts from has moved to a new address.",c:["who","whom","which","whose"],a:2,e:"선행사 회사(사물) + from의 목적어가 빠짐 → which."}
+{id:"n12-2",u:"u12",r:"J",s:"The supplier ____ we ordered the parts from has moved to a new address.",c:["who","whom","which","whose"],a:2,e:"선행사 회사(사물) + from의 목적어가 빠짐 → which."},
+{id:"n17-1",u:"u17",r:"C",s:"The new software is fast and ____.",c:["rely","reliable","reliably","reliability"],a:1,e:"and 앞이 형용사 fast → 같은 형용사 (병치)."},
+{id:"n17-2",u:"u17",r:"V",s:"Staff are asked to review the report and ____ any errors.",c:["correct","correcting","corrected","correction"],a:0,e:"to review and (to) correct → 동사원형 병치."},
+{id:"n17-3",u:"u17",r:"M",s:"The manager spoke both clearly and ____.",c:["confident","confidence","confidently","confide"],a:2,e:"both A and B: clearly(부사)와 같은 부사."},
+{id:"n17-4",u:"u17",r:"V",s:"Rarely ____ the factory stop production during the holidays.",c:["do","does","is","has"],a:1,e:"부정어 Rarely 문두 → 조동사 + 주어 도치. 주어 the factory 단수 + 뒤 동사원형 stop → does."},
+{id:"n17-5",u:"u17",r:"C",s:"____ is a copy of the revised contract.",c:["Enclose","Enclosing","Enclosed","Enclosure"],a:2,e:"보어 도치: Enclosed is + 주어 (= A copy ~ is enclosed)."},
+{id:"n17-6",u:"u17",r:"V",s:"Only after the inspection was finished ____ the workers allowed to enter.",c:["was","were","did","had"],a:1,e:"Only after ~ 문두 → 도치. 주어 the workers 복수 + 수동(allowed) → were."}
 ];

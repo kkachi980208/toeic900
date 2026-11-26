@@ -262,12 +262,40 @@ button,a,select,input,textarea{touch-action:manipulation;-webkit-tap-highlight-c
 .dday .meta .row{min-width:0}
 .dday select,.dday input{max-width:100%;min-width:0;flex:1 1 160px}
 @media (max-width:400px){.dday{grid-template-columns:1fr;gap:8px}.dday .num{font-size:40px}}
+
+/* ---------- 단어장 ---------- */
+@media (max-width:640px){nav{grid-template-columns:repeat(6,1fr)}nav button{font-size:11px}}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.vtile{display:grid;gap:3px;text-align:left;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit;cursor:pointer;min-width:0}
+.vtile b{font-size:14px}
+.vtile.cur{border:1.5px solid var(--omr)}
+.vtile.my{border-style:dashed}
+.vbar{display:block;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.vbar i{display:block;height:100%;background:var(--good)}
+.vlist{gap:0}
+.vrow{display:grid;gap:4px;padding:12px 0;border-top:1px dashed var(--line)}
+.vrow:first-child{border-top:0}
+.vw{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.vw b{font-size:17px}
+.vko{font-size:15px}
+.hid{filter:blur(6px);cursor:pointer;-webkit-user-select:none;user-select:none}
+.vpt{font-size:13.5px;color:var(--muted)}
+.vex{font-size:14px;font-style:normal;color:var(--ink);opacity:.9}
+.spk{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--omr);font-size:11px;cursor:pointer;flex:none}
+.vdot{width:9px;height:9px;border-radius:50%;background:var(--line);display:inline-block}
+.vdot.b1{background:var(--omr)}.vdot.b2{background:var(--warn)}.vdot.b3,.vdot.b4,.vdot.b5{background:var(--good)}
+.vform{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (max-width:480px){.vform{grid-template-columns:1fr}}
+.vflash .vpt,.vflash .vex{margin-top:8px;font-size:14px;line-height:1.5}
+.vq{display:grid;gap:8px;justify-items:start}
+.vbig{font-size:26px;font-weight:700}
 </style>
 <header class="top"><div class="inner">
   <div class="brand"><h1>TOEIC <span>900</span> 데일리</h1><small id="todayLbl" class="mono"></small></div>
   <nav role="tablist">
     <button role="tab" data-v="home" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span>오늘</span></button>
     <button role="tab" data-v="notes" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h10"/></svg><span>노트</span></button>
+    <button role="tab" data-v="voca" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="14" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v12"/></svg><span>단어</span></button>
     <button role="tab" data-v="stats" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V5M19 20v-6"/></svg><span>분석</span></button>
     <button role="tab" data-v="mock" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7"/><path d="M12 9v4l3 2M10 3h4"/></svg><span>실전</span></button>
     <button role="tab" data-v="set" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg><span>설정</span></button>
@@ -278,6 +306,7 @@ button,a,select,input,textarea{touch-action:manipulation;-webkit-tap-highlight-c
 <section class="view" id="v-home"></section>
 <section class="view" id="v-run" hidden></section>
 <section class="view" id="v-notes" hidden></section>
+<section class="view" id="v-voca" hidden></section>
 <section class="view" id="v-stats" hidden></section>
 
 <section class="view" id="v-mock" hidden>
@@ -314,7 +343,7 @@ const today=new Date();today.setHours(0,0,0,0);
 const TODAY=iso(today);
 const L="ABCD";
 function blankState(){return {v:2,updatedAt:0,created:Date.now(),exam:"2026-12-27",start:TODAY,qs:{},log:[],days:{},unk:[],wpos:0,wd:{},
- settings:{size:15,slot:"auto",speed:"auto"},plan:null,adapt:[],mocks:[],scores:[],cur:null,health:null,migrated:false}}
+ settings:{size:15,slot:"auto",speed:"auto"},plan:null,adapt:[],mocks:[],scores:[],cur:null,health:null,migrated:false,vq:{},vlog:[],myw:[]}}
 function readLocal(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}}
 let S=blankState();
 let LOCAL_OK=true;
@@ -526,7 +555,7 @@ const SESS=[
 ];
 WORDS.push(["acquire","인수하다"],["allocate","할당하다"],["anticipate","예상하다"],["brochure","안내 책자"],["commute","통근하다"],["compensate","보상하다"],["consecutive","연속적인"],["delegate","위임하다"],["dispatch","발송하다"],["durable","내구성 있는"],["enclose","동봉하다"],["endorse","지지하다"],["exceed","초과하다"],["expire","만료되다"],["feasible","실현 가능한"],["fluctuate","변동하다"],["forward","전달하다"],["incentive","장려금"],["install","설치하다"],["itemized","항목별로 된"],["lease","임대하다"],["liability","책임"],["merchandise","상품"],["notify","통지하다"],["obtain","얻다"],["overtime","초과 근무"],["patron","고객, 후원자"],["payroll","급여 대장"],["personnel","인사부; 직원"],["prospective","장래의, 잠재적인"],["quota","할당량"],["receipt","영수증"],["recipient","수령인"],["remit","송금하다"],["retail","소매"],["wholesale","도매"],["retain","유지하다"],["routine","일상적인"],["specification","사양"],["stationery","문구류"],["streamline","간소화하다"],["tenant","세입자"],["terminate","종료하다"],["transit","운송"],["turnout","참석자 수"],["unanimous","만장일치의"],["utility","공공요금"],["vacancy","공석"],["venue","장소"],["verify","확인하다"],["waive","면제하다"],["withdraw","인출하다"],["yield","산출하다"],["adjacent","인접한"],["deduct","공제하다"]);
 /* ===== 단원 노트 (사용자 노트 기반 · 오류 수정 표시) ===== */
-const GROUPS=[["뼈대","문장 구조와 동사"],["품사","명사·대명사·형용사·부사"],["연결","전치사·접속사·명사절·관계사"],["구문","비교·준동사"],["추가","노트 밖 빈출"]];
+const GROUPS=[["Section 1 문장 패턴","주어·동사·목적어·보어·수식어"],["Section 2 동사구","동사 형태·수일치·태·시제·가정법"],["Section 3 준동사구","to부정사·동명사·분사"],["Section 4 품사","명사·대명사·형용사·부사·전치사"],["Section 5 접속사와 절","등위·상관접속사·관계절·부사절·명사절"],["Section 6 특수 구문","비교·병치·도치"],["Vocabulary 어휘","짝 표현·유사 의미어 (단어 탭과 연결)"]];
 const SLOTS=[["S","주어"],["V","동사"],["O","목적어"],["C","보어"],["M","수식어"],["J","연결어"]];
 const UNITS=[
 {id:"u0",g:0,n:"문장 구조 S·V·C·O·M",
@@ -624,10 +653,21 @@ const UNITS=[
  sec:[{h:"짝으로 나오는 표현",rows:[["comply with","준수하다",""],["be responsible for","담당하다",""],["be eligible for","자격이 있다",""],["take effect","시행되다 (take place = 열리다)",""],["in advance","미리",""],["on time / in time","정각에 / 늦지 않게",""],["so + 형용사 + that","너무 ~해서 ~하다 (such + a + 명사)",""],["increase by + 수치","~만큼 증가",""]]}],
  exam:"뜻이 비슷한 단어 4개 → 빈칸 앞뒤 단어와 짝이 맞는 것부터. 모르면 10초 안에 찍고 넘어간다.",
  trap:["take place / take effect","so / such"],fix:[]},
-{id:"u16",g:4,n:"가정법·도치",
+{id:"u16",g:4,n:"가정법",
  sec:[{h:"공식",rows:[["Should + 주어 + V, 명령문","혹시 ~하면 (토익 최다)","Should you have questions, call us."],["If + 과거, would + V","현재 반대",""],["If + had p.p., would have p.p.","과거 반대",""],["Had + 주어 + p.p.","If 생략 도치",""]]}],
- exam:"주절에 would have p.p. → Had / 빈칸 뒤 동사원형 + 명령문 → Should.",trap:["If 자리에 Had·Should 구분"],fix:[]}
+ exam:"주절에 would have p.p. → Had / 빈칸 뒤 동사원형 + 명령문 → Should.",trap:["If 자리에 Had·Should 구분"],fix:[]},
+{id:"u17",g:5,n:"병치·도치",
+ sec:[{h:"병치 = and·or·but 앞뒤는 같은 모양",rows:[["등위접속사 앞뒤 품사·형태 일치","명사-명사, 형용사-형용사, 동사원형-동사원형","fast and reliable"],["상관접속사도 A·B 형태 일치","both A and B / not only A but also B / either A or B","both quickly and accurately"],["비교 대상 일치","than 뒤에 that of / those of로 같은 대상 비교","higher than that of last year"]]},
+  {h:"도치 = 강조어가 맨 앞에 오면 어순이 바뀜",rows:[["부정어가 맨 앞 → 조동사 + 주어","Never / Rarely / Hardly / Seldom","Rarely does the office close early."],["Only + 부사(구·절)가 맨 앞 → 조동사 + 주어","Only after ~ did/was/can + 주어","Only after the meeting did he call."],["보어가 맨 앞 → be동사 + 주어","Attached / Enclosed / Included is(are) + 주어","Enclosed is a copy of the invoice."],["So / Neither + 조동사 + 주어","나도 그렇다 / 나도 아니다","So does Ms. Kim."]]}],
+ exam:"빈칸 앞뒤에 and·or·but이 있으면 반대편 단어의 품사·형태를 그대로 따른다. 문장 맨 앞이 Never·Rarely·Only·Enclosed면 뒤 어순(조동사·be + 주어)을 확인한다.",
+ trap:["and 뒤를 앞과 다른 품사로 고르기","Enclosed is/are는 뒤에 오는 진짜 주어에 수 일치","도치 문장에서 주어 수(단수/복수)로 does/do, was/were 결정"],fix:[]}
 ];
+
+/* RC 기본서 Section 순서로 정렬 (단원 id는 유지) */
+const RC_ORDER=["u0","u1","u2","u3","u4","u16","u14","u5","u6","u7","u8","u9","u10","u12","u11","u13","u17","u15"];
+const RC_G={u0:0,u1:0,u2:1,u3:1,u4:1,u16:1,u14:2,u5:3,u6:3,u7:3,u8:3,u9:3,u10:4,u12:4,u11:4,u13:5,u17:5,u15:6};
+UNITS.sort((a,b)=>RC_ORDER.indexOf(a.id)-RC_ORDER.indexOf(b.id));
+UNITS.forEach(u=>{u.g=RC_G[u.id]});
 
 /* 자리 태그: 기존 문제 */
 const SLOT_OLD={a0:"V",a1:"M",a2:"J",a3:"V",a4:"V",a5:"V",a6:"O",a7:"O",a8:"M",a9:"J",a10:"J",a11:"J",a12:"C",a13:"O",a14:"J",a15:"O",a16:"V",a17:"M",a18:"C",a19:"J",a20:"J",a21:"J",a22:"M",a23:"M",a24:"J",
@@ -693,8 +733,651 @@ const NEWQ=[
 {id:"n11-7",u:"u11",r:"J",s:"The survey shows ____ customers prefer online shopping.",c:["that","what","which","whose"],a:0,e:"뒤 완전 → that."},
 {id:"n11-8",u:"u11",r:"J",s:"We discussed ____ we could reduce shipping costs.",c:["how","what","which","whom"],a:0,e:"뒤 완전 + 방법 → how."},
 {id:"n12-1",u:"u12",r:"J",s:"This is the factory ____ our new dampers are produced.",c:["which","where","what","whose"],a:1,e:"뒤 완전(수동문) + 장소 선행사 → where."},
-{id:"n12-2",u:"u12",r:"J",s:"The supplier ____ we ordered the parts from has moved to a new address.",c:["who","whom","which","whose"],a:2,e:"선행사 회사(사물) + from의 목적어가 빠짐 → which."}
+{id:"n12-2",u:"u12",r:"J",s:"The supplier ____ we ordered the parts from has moved to a new address.",c:["who","whom","which","whose"],a:2,e:"선행사 회사(사물) + from의 목적어가 빠짐 → which."},
+{id:"n17-1",u:"u17",r:"C",s:"The new software is fast and ____.",c:["rely","reliable","reliably","reliability"],a:1,e:"and 앞이 형용사 fast → 같은 형용사 (병치)."},
+{id:"n17-2",u:"u17",r:"V",s:"Staff are asked to review the report and ____ any errors.",c:["correct","correcting","corrected","correction"],a:0,e:"to review and (to) correct → 동사원형 병치."},
+{id:"n17-3",u:"u17",r:"M",s:"The manager spoke both clearly and ____.",c:["confident","confidence","confidently","confide"],a:2,e:"both A and B: clearly(부사)와 같은 부사."},
+{id:"n17-4",u:"u17",r:"V",s:"Rarely ____ the factory stop production during the holidays.",c:["do","does","is","has"],a:1,e:"부정어 Rarely 문두 → 조동사 + 주어 도치. 주어 the factory 단수 + 뒤 동사원형 stop → does."},
+{id:"n17-5",u:"u17",r:"C",s:"____ is a copy of the revised contract.",c:["Enclose","Enclosing","Enclosed","Enclosure"],a:2,e:"보어 도치: Enclosed is + 주어 (= A copy ~ is enclosed)."},
+{id:"n17-6",u:"u17",r:"V",s:"Only after the inspection was finished ____ the workers allowed to enter.",c:["was","were","did","had"],a:1,e:"Only after ~ 문두 → 도치. 주어 the workers 복수 + 수동(allowed) → were."}
 ];
+/* ===== 단어장: 토익 빈출 주제 30일 구성 (자체 제작) =====
+   항목: [단어, 품사, 뜻, 출제포인트, 예문, 예문 해석, 유의어] */
+const VOCA=[
+{d:1,t:"채용·구직",w:[
+["applicant","n","지원자","applicant(사람) ↔ application(지원서) 구분","Each applicant must submit two references.","각 지원자는 추천서 2부를 제출해야 한다.","candidate"],
+["qualified","adj","자격을 갖춘","be qualified for ~ / qualification 자격 요건","We are looking for qualified engineers.","자격을 갖춘 엔지니어를 찾고 있다.","eligible"],
+["requirement","n","요건, 필요조건","meet the requirements 요건을 충족하다","Candidates must meet all the requirements.","지원자는 모든 요건을 충족해야 한다.","condition"],
+["position","n","직책, 일자리","apply for a position 직책에 지원하다","She applied for the manager position.","그녀는 관리자 직책에 지원했다.","post"],
+["experience","n","경험","experience in ~ / experienced 숙련된","Two years of sales experience is required.","2년의 영업 경력이 필요하다.","background"],
+["résumé","n","이력서","submit a résumé","Please attach your résumé to the e-mail.","이메일에 이력서를 첨부해 주세요.","CV"],
+["reference","n","추천서; 참고","letter of reference / with reference to ~에 관하여","Please provide two professional references.","업무 관련 추천서 2부를 제출해 주세요.","recommendation"],
+["interview","n","면접","interviewer 면접관 / interviewee 면접자","Interviews will be held next Tuesday.","면접은 다음 주 화요일에 열린다.",""],
+["hire","v","고용하다","hire A as B A를 B로 고용하다","The firm plans to hire 20 new staff.","회사는 신입 직원 20명을 고용할 계획이다.","employ"],
+["recruit","v","모집하다","recruitment 채용 / recruiter 채용 담당자","We are recruiting sales representatives.","영업 직원을 모집하고 있다.","hire"],
+["candidate","n","후보자","the ideal candidate 이상적인 후보자","The ideal candidate will speak English fluently.","이상적인 후보자는 영어를 유창하게 할 것이다.","applicant"],
+["eligible","adj","자격이 있는","be eligible for N / be eligible to V","Only full-time employees are eligible for the bonus.","정규직 직원만 보너스를 받을 자격이 있다.","entitled"],
+["apply","v","지원하다; 적용하다","apply for 지원 / apply to 적용","To apply, visit our Web site.","지원하려면 웹사이트를 방문하세요.",""],
+["expertise","n","전문 지식","expertise in ~ ~에 대한 전문 지식","Her expertise in marketing impressed the panel.","그녀의 마케팅 전문 지식이 심사단에게 깊은 인상을 남겼다.","knowledge"],
+["proficiency","n","능숙함","proficiency in ~ / proficient 능숙한","Proficiency in Korean is preferred.","한국어 능통자 우대.","skill"],
+["preferred","adj","우대되는","~ is preferred ~ 우대","A degree in engineering is preferred.","공학 학위 소지자 우대.","favored"],
+["deadline","n","마감 기한","meet the deadline / by the deadline","The application deadline is May 30.","지원 마감일은 5월 30일이다.","due date"],
+["probation","n","수습 기간","probationary period 수습 기간","New hires work under a three-month probation.","신입 직원은 3개월 수습 기간을 거친다.","trial period"],
+["personnel","n","인사부; 직원","personnel department / 형용사 personal과 구분","Contact the personnel department for details.","자세한 내용은 인사부에 문의하세요.","staff"],
+["offer","n","제안","job offer / offer A B A에게 B를 제안하다","He accepted the job offer last week.","그는 지난주 일자리 제안을 수락했다.","proposal"]]},
+{d:2,t:"규칙·법률",w:[
+["comply","v","준수하다","comply with (자동사 + with)","All staff must comply with safety rules.","모든 직원은 안전 규칙을 준수해야 한다.","follow"],
+["regulation","n","규정","safety regulations 안전 규정","New regulations take effect in July.","새 규정이 7월에 시행된다.","rule"],
+["policy","n","정책, 방침","company policy / return policy 반품 정책","Our refund policy is posted online.","환불 정책은 온라인에 게시되어 있다.","guideline"],
+["mandatory","adj","의무적인","mandatory training ↔ optional","Attendance at the workshop is mandatory.","워크숍 참석은 의무이다.","required"],
+["prohibit","v","금지하다","prohibit A from V-ing","Smoking is prohibited in the building.","건물 내 흡연은 금지되어 있다.","ban"],
+["permit","n","허가증","parking permit / permit A to V","Visitors need a permit to park here.","방문객은 여기에 주차하려면 허가증이 필요하다.","license"],
+["authorize","v","권한을 주다","be authorized to V / authorization 승인","Only managers are authorized to approve refunds.","관리자만 환불을 승인할 권한이 있다.","allow"],
+["violate","v","위반하다","violation 위반","Employees who violate the policy will be warned.","정책을 위반한 직원은 경고를 받는다.","break"],
+["legal","adj","법률의; 합법적인","legal advice ↔ illegal","Please seek legal advice before signing.","서명 전에 법률 자문을 구하세요.","lawful"],
+["enforce","v","시행하다","enforce a rule / enforcement 시행","The city will strictly enforce the new law.","시는 새 법을 엄격히 시행할 것이다.","implement"],
+["obey","v","따르다","obey the rules (타동사, 전치사 없음)","Drivers must obey the speed limit.","운전자는 제한 속도를 지켜야 한다.","follow"],
+["adhere","v","고수하다","adhere to (자동사 + to)","Staff must adhere to the dress code.","직원은 복장 규정을 지켜야 한다.","stick"],
+["exception","n","예외","with the exception of ~ / exceptional 뛰어난","There are no exceptions to this rule.","이 규칙에는 예외가 없다.","exclusion"],
+["procedure","n","절차","follow the procedure 절차를 따르다","Please follow the procedure for reporting accidents.","사고 보고 절차를 따라 주세요.","process"],
+["restriction","n","제한","restriction on ~ / restrict 제한하다","There are restrictions on carry-on luggage.","기내 수하물에는 제한이 있다.","limit"],
+["approval","n","승인","-al로 끝나는 명사 / approve of","The plan requires board approval.","그 계획은 이사회 승인이 필요하다.","consent"],
+["strictly","adv","엄격히","strictly prohibited 엄격히 금지된","Photography is strictly prohibited.","사진 촬영은 엄격히 금지된다.","firmly"],
+["abide","v","준수하다","abide by (자동사 + by)","All members must abide by the club rules.","모든 회원은 클럽 규칙을 따라야 한다.","obey"],
+["revise","v","개정하다","revised policy / revision 개정","The handbook was revised last month.","안내서가 지난달 개정되었다.","amend"],
+["effective","adj","시행되는; 효과적인","effective + 날짜 = ~부로 시행","The new rates are effective January 1.","새 요금은 1월 1일부로 시행된다.","in effect"]]},
+{d:3,t:"일반 사무",w:[
+["submit","v","제출하다","submit A to B","Please submit the report by Friday.","금요일까지 보고서를 제출해 주세요.","hand in"],
+["review","v","검토하다","under review 검토 중","The manager will review your proposal.","관리자가 제안서를 검토할 것이다.","examine"],
+["attach","v","첨부하다","attached file / attachment 첨부 파일","I have attached the agenda.","안건을 첨부했습니다.","enclose"],
+["distribute","v","배포하다","distribute A to B / distribution","Copies will be distributed at the meeting.","사본은 회의에서 배포될 것이다.","hand out"],
+["supervisor","n","관리자, 상사","report to a supervisor","Ask your supervisor for approval.","상사에게 승인을 요청하세요.","manager"],
+["assignment","n","업무, 과제","assign 배정하다 / be assigned to","She completed the assignment early.","그녀는 업무를 일찍 끝냈다.","task"],
+["colleague","n","동료","= coworker","He discussed the issue with his colleagues.","그는 동료들과 그 문제를 논의했다.","coworker"],
+["duty","n","직무","on duty 근무 중 / duties include ~","Duties include answering phone calls.","업무에는 전화 응대가 포함된다.","responsibility"],
+["responsible","adj","책임 있는","be responsible for ~을 담당하다","Mr. Han is responsible for payroll.","한 씨가 급여 업무를 담당한다.","in charge"],
+["handle","v","처리하다","handle complaints 불만을 처리하다","She handles all customer inquiries.","그녀가 모든 고객 문의를 처리한다.","deal with"],
+["organize","v","정리하다; 준비하다","organized 체계적인 / organizer 주최자","Please organize the files by date.","파일을 날짜별로 정리해 주세요.","arrange"],
+["promptly","adv","신속히; 정각에","promptly at 9 A.M. 9시 정각에","Please reply promptly.","신속히 답변해 주세요.","quickly"],
+["memo","n","회람","send a memo 회람을 보내다","A memo was sent to all staff.","전 직원에게 회람이 발송되었다.","notice"],
+["inform","v","알리다","inform A of B / inform A that","Please inform us of any changes.","변경 사항이 있으면 알려 주세요.","notify"],
+["remind","v","상기시키다","remind A to V / remind A of B","Let me remind you to lock the door.","문 잠그는 것을 다시 한번 알려 드립니다.","prompt"],
+["confidential","adj","기밀의","confidential information 기밀 정보","These documents are confidential.","이 서류들은 기밀이다.","private"],
+["draft","n","초안","first draft 초안 / draft a letter","Please send me the draft by noon.","정오까지 초안을 보내 주세요.","outline"],
+["update","v","갱신하다","update A on B A에게 B에 대해 알리다","Please update the client list.","고객 목록을 갱신해 주세요.","revise"],
+["reschedule","v","일정을 변경하다","reschedule A for B","The meeting was rescheduled for Monday.","회의가 월요일로 변경되었다.","postpone"],
+["workload","n","업무량","heavy workload 많은 업무량","We hired temporary staff to reduce the workload.","업무량을 줄이려고 임시 직원을 고용했다.","burden"]]},
+{d:4,t:"여가·행사",w:[
+["venue","n","장소","event venue 행사 장소","The venue can hold 300 guests.","그 장소는 300명을 수용할 수 있다.","location"],
+["attend","v","참석하다","attend the meeting (타동사) / attendance 참석 / attendee 참석자","Over 200 people attended the event.","200명 넘게 행사에 참석했다.","participate in"],
+["participate","v","참가하다","participate in (자동사 + in)","Employees are encouraged to participate in the race.","직원들의 경주 참가를 권장한다.","take part"],
+["register","v","등록하다","register for / registration 등록","Register for the workshop online.","워크숍은 온라인으로 등록하세요.","sign up"],
+["admission","n","입장(료)","admission fee / free admission","Admission is free for children.","어린이는 입장료가 무료다.","entry"],
+["reservation","n","예약","make a reservation","Reservations are required for groups.","단체는 예약이 필요하다.","booking"],
+["exhibition","n","전시회","exhibit 전시하다; 전시품","The exhibition runs until May 30.","전시회는 5월 30일까지 열린다.","show"],
+["performance","n","공연; 실적","performance review 인사 평가","The performance begins at 8 P.M.","공연은 저녁 8시에 시작한다.","show"],
+["celebrate","v","기념하다","celebration 기념 행사","We will celebrate our 10th anniversary.","창립 10주년을 기념할 것이다.","commemorate"],
+["host","v","주최하다","host an event / host 진행자","The city will host the festival.","시가 축제를 주최할 것이다.","hold"],
+["banquet","n","연회","awards banquet 시상식 연회","The annual banquet will be held at the hotel.","연례 연회는 호텔에서 열린다.","dinner"],
+["refreshments","n","다과","refreshments will be served (복수형으로 출제)","Light refreshments will be served after the talk.","강연 후 가벼운 다과가 제공된다.","snacks"],
+["souvenir","n","기념품","souvenir shop 기념품 가게","Each guest will receive a souvenir.","손님마다 기념품을 받는다.","memento"],
+["postpone","v","연기하다","postpone V-ing / due to the weather","The concert was postponed due to rain.","콘서트가 비 때문에 연기되었다.","delay"],
+["spectator","n","관중","= audience","Thousands of spectators watched the game.","수천 명의 관중이 경기를 지켜봤다.","viewer"],
+["sold out","adj","매진된","be sold out","Tickets for the show are sold out.","공연 표가 매진되었다.","unavailable"],
+["occasion","n","행사; 때","on the occasion of ~을 맞아","The dinner was a special occasion.","그 저녁 식사는 특별한 행사였다.","event"],
+["entertainment","n","오락","entertain 즐겁게 하다","Live entertainment will be provided.","라이브 공연이 제공된다.","amusement"],
+["volunteer","n","자원봉사자","volunteer to V 자원해서 ~하다","We need volunteers to help at the festival.","축제를 도울 자원봉사자가 필요하다.","helper"],
+["annual","adj","연례의","annual event / annually 매년","The annual picnic is held every June.","연례 야유회는 매년 6월에 열린다.","yearly"]]},
+{d:5,t:"마케팅·광고",w:[
+["advertise","v","광고하다","advertisement 광고 / advertising 광고업","The company advertises on social media.","그 회사는 소셜미디어에 광고한다.","promote"],
+["campaign","n","캠페인","launch a campaign 캠페인을 시작하다","The ad campaign increased sales.","광고 캠페인으로 매출이 늘었다.","drive"],
+["promote","v","홍보하다; 승진시키다","promotion 홍보; 승진","The event will promote local products.","그 행사는 지역 제품을 홍보할 것이다.","publicize"],
+["survey","n","설문조사","conduct a survey 설문조사를 실시하다","We conducted a customer survey.","고객 설문조사를 실시했다.","poll"],
+["consumer","n","소비자","consumer demand 소비자 수요","Consumer spending rose in May.","5월에 소비자 지출이 늘었다.","customer"],
+["target","v","대상으로 삼다","be targeted at ~ ~을 겨냥하다","The product targets young adults.","그 제품은 젊은 성인을 겨냥한다.","aim at"],
+["demand","n","수요","demand for ~ / in demand 수요가 많은","Demand for electric cars is growing.","전기차 수요가 늘고 있다.","need"],
+["strategy","n","전략","marketing strategy / strategic 전략적인","We need a new pricing strategy.","새로운 가격 전략이 필요하다.","plan"],
+["brand","n","상표","brand recognition 브랜드 인지도","The brand is popular among teenagers.","그 브랜드는 십대에게 인기가 있다.",""],
+["competitor","n","경쟁사","compete 경쟁하다 / competitive 경쟁력 있는","Our prices are lower than our competitors'.","우리 가격은 경쟁사보다 낮다.","rival"],
+["launch","v","출시하다","launch a product / launch 출시","The new model will be launched in March.","신모델은 3월에 출시된다.","release"],
+["feedback","n","의견","feedback on ~ (불가산명사)","We welcome your feedback on the service.","서비스에 대한 의견을 환영합니다.","comments"],
+["visibility","n","노출도, 가시성","visible 눈에 보이는","Online ads improved our brand visibility.","온라인 광고로 브랜드 노출이 늘었다.","exposure"],
+["appeal","v","관심을 끌다","appeal to ~ / appealing 매력적인","The design appeals to young customers.","그 디자인은 젊은 고객의 관심을 끈다.","attract"],
+["expand","v","확장하다","expansion 확장","We plan to expand into Asian markets.","아시아 시장으로 확장할 계획이다.","extend"],
+["publicity","n","홍보, 매스컴의 관심","publicize 알리다","The award brought the company good publicity.","그 상으로 회사가 좋은 홍보 효과를 얻었다.","promotion"],
+["endorse","v","보증하다, 광고에 나오다","endorsement 보증, 광고 출연","The athlete endorses our shoes.","그 선수가 우리 신발을 광고한다.","support"],
+["coupon","n","쿠폰","redeem a coupon 쿠폰을 사용하다","Present this coupon for 10% off.","이 쿠폰을 제시하면 10% 할인됩니다.","voucher"],
+["extensive","adj","광범위한","extensive research / extensively 광범위하게","The company did extensive market research.","회사는 광범위한 시장 조사를 했다.","broad"],
+["attract","v","끌어들이다","attractive 매력적인 / attraction 명소","The sale attracted many shoppers.","세일에 많은 쇼핑객이 몰렸다.","draw"]]},
+{d:6,t:"경제·시장",w:[
+["economy","n","경제","economic 경제의 ↔ economical 절약하는","The local economy is growing.","지역 경제가 성장하고 있다.","market"],
+["inflation","n","물가 상승","rate of inflation 물가 상승률","Inflation rose to 3 percent.","물가 상승률이 3%로 올랐다.","price rise"],
+["fluctuate","v","변동하다","fluctuation 변동","Fuel prices fluctuate every week.","연료 가격은 매주 변동한다.","vary"],
+["decline","v","감소하다; 거절하다","a decline in ~ ~의 감소","Sales declined by 5 percent.","매출이 5% 감소했다.","decrease"],
+["increase","n","증가","an increase in ~ / increase by + 수치","There was an increase in exports.","수출이 증가했다.","rise"],
+["steadily","adv","꾸준히","rise steadily 꾸준히 오르다","Profits have risen steadily.","수익이 꾸준히 올랐다.","consistently"],
+["sharply","adv","급격히","fall sharply 급락하다","Prices dropped sharply last month.","지난달 가격이 급격히 떨어졌다.","dramatically"],
+["stable","adj","안정된","stability 안정","The market remained stable.","시장은 안정세를 유지했다.","steady"],
+["recession","n","불경기","economic recession 경기 침체","Many firms struggled during the recession.","불경기 동안 많은 기업이 어려움을 겪었다.","downturn"],
+["forecast","n","예측","sales forecast 매출 예측","The forecast predicts strong growth.","예측은 강한 성장을 내다본다.","prediction"],
+["analyst","n","분석가","analyze 분석하다 / analysis 분석","Analysts expect prices to rise.","분석가들은 가격이 오를 것으로 본다.","expert"],
+["indicate","v","나타내다","indicate that / indication 표시","The data indicate strong demand.","자료는 강한 수요를 나타낸다.","show"],
+["estimate","v","추정하다","an estimated 500 people / estimate 견적","Repairs are estimated to cost $500.","수리비는 500달러로 추정된다.","calculate"],
+["growth","n","성장","rapid growth 급성장","The company reported rapid growth.","회사는 급성장을 발표했다.","expansion"],
+["industry","n","산업","industrial 산업의 ↔ industrious 근면한","The auto industry is changing quickly.","자동차 산업이 빠르게 변하고 있다.","sector"],
+["substantial","adj","상당한","substantially 상당히","We saw a substantial rise in orders.","주문이 상당히 늘었다.","considerable"],
+["significant","adj","중요한; 상당한","significantly 상당히","There was a significant drop in costs.","비용이 상당히 줄었다.","considerable"],
+["trend","n","추세","market trend 시장 동향","We follow the latest market trends.","최신 시장 동향을 따른다.","tendency"],
+["outlook","n","전망","economic outlook 경제 전망","The outlook for next year is positive.","내년 전망은 긍정적이다.","prospect"],
+["boost","v","증대시키다","boost sales 매출을 늘리다","The campaign boosted sales by 20%.","그 캠페인으로 매출이 20% 늘었다.","increase"]]},
+{d:7,t:"쇼핑·구매",w:[
+["purchase","v","구매하다","make a purchase / proof of purchase 구매 증빙","Keep your receipt as proof of purchase.","구매 증빙으로 영수증을 보관하세요.","buy"],
+["receipt","n","영수증; 수령","upon receipt of ~ ~을 받는 즉시","Payment is due upon receipt of the invoice.","청구서를 받는 즉시 지불해야 한다.","proof of payment"],
+["refund","n","환불","full refund 전액 환불","You can get a full refund within 30 days.","30일 이내에 전액 환불받을 수 있다.","reimbursement"],
+["exchange","v","교환하다","exchange A for B A를 B로 교환하다","You may exchange the item for a different size.","다른 사이즈로 교환할 수 있다.","swap"],
+["merchandise","n","상품","불가산명사 (-s 불가)","All merchandise is 20% off.","모든 상품이 20% 할인이다.","goods"],
+["discount","n","할인","at a discount / discounted price","Members receive a 10% discount.","회원은 10% 할인을 받는다.","reduction"],
+["affordable","adj","가격이 알맞은","afford 여유가 되다","We offer quality products at affordable prices.","좋은 제품을 알맞은 가격에 제공한다.","reasonable"],
+["item","n","물품","itemized receipt 항목별 영수증","This item is out of stock.","이 물품은 품절이다.","product"],
+["warranty","n","품질 보증","under warranty 보증 기간 중","The laptop is still under warranty.","그 노트북은 아직 보증 기간이다.","guarantee"],
+["defective","adj","결함 있는","defect 결함","Defective products will be replaced.","결함 있는 제품은 교환된다.","faulty"],
+["inventory","n","재고","take inventory 재고 조사를 하다","We check the inventory every Monday.","매주 월요일 재고를 확인한다.","stock"],
+["out of stock","adj","품절된","↔ in stock 재고가 있는","The blue model is currently out of stock.","파란색 모델은 현재 품절이다.","sold out"],
+["checkout","n","계산대","at checkout 계산할 때","Please present your coupon at checkout.","계산할 때 쿠폰을 제시하세요.",""],
+["retail","adj","소매의","retailer 소매업체 ↔ wholesale 도매","The retail price is $50.","소매가는 50달러다.",""],
+["browse","v","둘러보다","browse the shelves","Customers are browsing in the store.","손님들이 가게를 둘러보고 있다.","look around"],
+["selection","n","선택 가능한 것들","a wide selection of ~ 다양한 ~","We carry a wide selection of shoes.","다양한 신발을 갖추고 있다.","range"],
+["valid","adj","유효한","↔ invalid / validity 유효성","The coupon is valid until June 30.","쿠폰은 6월 30일까지 유효하다.","effective"],
+["reasonable","adj","합리적인","reasonably priced 적당한 가격의","The hotel offers reasonable rates.","그 호텔은 합리적인 요금을 제공한다.","fair"],
+["in bulk","phr","대량으로","buy in bulk 대량 구매하다","Buying in bulk saves money.","대량 구매하면 돈이 절약된다.","in large quantities"],
+["deliver","v","배달하다","delivery 배달","Orders are delivered within three days.","주문은 3일 이내에 배달된다.","ship"]]},
+{d:8,t:"제품 개발",w:[
+["develop","v","개발하다","development 개발 / developer 개발자","The team developed a new battery.","팀이 새 배터리를 개발했다.","create"],
+["innovative","adj","혁신적인","innovation 혁신","The company is known for its innovative designs.","그 회사는 혁신적인 디자인으로 유명하다.","creative"],
+["research","n","연구","research and development (R&D)","We invest heavily in research.","연구에 많이 투자한다.","study"],
+["prototype","n","시제품","build a prototype 시제품을 만들다","The prototype will be tested next week.","시제품은 다음 주에 시험된다.","model"],
+["feature","n","특징","key features / feature 특징으로 하다","The phone features a large screen.","그 휴대폰은 큰 화면이 특징이다.","characteristic"],
+["upgrade","v","개선하다","upgrade to ~ ~로 업그레이드하다","We upgraded the software last month.","지난달 소프트웨어를 개선했다.","improve"],
+["durable","adj","내구성 있는","durability 내구성","The case is made of durable plastic.","케이스는 튼튼한 플라스틱으로 만들어졌다.","sturdy"],
+["specification","n","사양","technical specifications 기술 사양","Check the specifications before ordering.","주문 전에 사양을 확인하세요.","details"],
+["patent","n","특허","apply for a patent 특허를 출원하다","The firm holds a patent on the design.","그 회사가 디자인 특허를 갖고 있다.","license"],
+["test","v","시험하다","test A for B A의 B를 검사하다","Each unit is tested for safety.","모든 제품은 안전성 검사를 받는다.","examine"],
+["improve","v","개선하다","improvement 개선","The new design improves fuel efficiency.","새 디자인은 연비를 개선한다.","enhance"],
+["enhance","v","향상시키다","enhanced performance 향상된 성능","The update enhances security.","업데이트로 보안이 강화된다.","improve"],
+["efficient","adj","효율적인","efficiency 효율 / efficiently 효율적으로","The new engine is more efficient.","새 엔진이 더 효율적이다.","economical"],
+["compatible","adj","호환되는","be compatible with ~와 호환되다","The charger is compatible with all models.","충전기는 모든 모델과 호환된다.","suitable"],
+["design","v","설계하다","be designed to V ~하도록 설계되다","The seat is designed to reduce back pain.","그 좌석은 허리 통증을 줄이도록 설계되었다.","plan"],
+["release","v","출시하다","release date 출시일","The game will be released in May.","그 게임은 5월에 출시된다.","launch"],
+["function","n","기능","functional 기능적인 / function 작동하다","This button has two functions.","이 버튼에는 두 가지 기능이 있다.","role"],
+["reliable","adj","믿을 수 있는","reliability 신뢰성","Customers want reliable products.","고객은 믿을 수 있는 제품을 원한다.","dependable"],
+["modify","v","수정하다","modification 수정","We modified the design based on feedback.","의견을 바탕으로 디자인을 수정했다.","alter"],
+["cutting-edge","adj","최첨단의","cutting-edge technology","The lab uses cutting-edge equipment.","그 연구소는 최첨단 장비를 쓴다.","advanced"]]},
+{d:9,t:"생산·공장",w:[
+["manufacture","v","제조하다","manufacturer 제조업체","The plant manufactures auto parts.","그 공장은 자동차 부품을 제조한다.","produce"],
+["assemble","v","조립하다","assembly line 조립 라인","Workers assemble the engines by hand.","작업자들이 엔진을 손으로 조립한다.","put together"],
+["facility","n","시설","production facility 생산 시설","The new facility opened in March.","새 시설이 3월에 문을 열었다.","plant"],
+["equipment","n","장비","불가산명사 (-s 불가)","All equipment must be inspected weekly.","모든 장비는 매주 점검해야 한다.","machinery"],
+["operate","v","작동하다; 운영하다","operation 운영 / operator 작업자","Only trained staff may operate the machine.","교육받은 직원만 기계를 작동할 수 있다.","run"],
+["capacity","n","생산 능력; 수용력","at full capacity 전면 가동 중","The factory is running at full capacity.","공장이 전면 가동 중이다.","volume"],
+["output","n","생산량","increase output 생산량을 늘리다","Output rose by 15 percent.","생산량이 15% 늘었다.","production"],
+["inspect","v","점검하다","inspection 점검 / inspector 검사관","Inspectors check every product.","검사관이 모든 제품을 점검한다.","examine"],
+["quality","n","품질","quality control 품질 관리","Quality control is our top priority.","품질 관리가 최우선이다.","standard"],
+["safety","n","안전","safety gear 안전 장비 / safe 안전한","Wear safety goggles at all times.","항상 보안경을 착용하세요.","security"],
+["material","n","재료","raw materials 원자재","The cost of raw materials has increased.","원자재 비용이 올랐다.","supplies"],
+["shipment","n","선적(물)","ship 보내다","The shipment will arrive Tuesday.","화물은 화요일에 도착한다.","delivery"],
+["maintenance","n","유지 보수","maintain 유지하다","The machines need regular maintenance.","기계는 정기적인 유지 보수가 필요하다.","upkeep"],
+["malfunction","n","오작동","= breakdown","A malfunction stopped the production line.","오작동으로 생산 라인이 멈췄다.","failure"],
+["automate","v","자동화하다","automated 자동화된 / automation 자동화","The packing process is fully automated.","포장 공정은 완전히 자동화되어 있다.","mechanize"],
+["supervise","v","감독하다","supervision 감독 / supervisor 감독자","Mr. Lee supervises the night shift.","이 씨가 야간 근무를 감독한다.","oversee"],
+["shift","n","교대 근무","night shift 야간 근무","She works the morning shift.","그녀는 오전 근무를 한다.","turn"],
+["streamline","v","간소화하다","streamline the process 공정을 간소화하다","We streamlined the ordering process.","주문 절차를 간소화했다.","simplify"],
+["productivity","n","생산성","productive 생산적인","New tools increased productivity.","새 도구로 생산성이 높아졌다.","efficiency"],
+["defect","n","결함","defective 결함 있는","Each part is checked for defects.","모든 부품은 결함 검사를 받는다.","flaw"]]},
+{d:10,t:"고객 서비스",w:[
+["customer","n","고객","customer service 고객 서비스","Customer satisfaction is our goal.","고객 만족이 우리의 목표다.","client"],
+["complaint","n","불만","complain about ~ (동사)","We received a complaint about the noise.","소음에 관한 불만을 받았다.","grievance"],
+["inquiry","n","문의","inquire about ~ ~에 대해 문의하다","Thank you for your inquiry.","문의해 주셔서 감사합니다.","question"],
+["respond","v","응답하다","respond to (자동사) / response 응답","We respond to all e-mails within 24 hours.","모든 이메일에 24시간 이내 답한다.","reply"],
+["resolve","v","해결하다","resolution 해결","The issue was resolved quickly.","문제가 빨리 해결되었다.","settle"],
+["satisfaction","n","만족","satisfied(사람) / satisfying(사물)","Customer satisfaction has improved.","고객 만족도가 높아졌다.","contentment"],
+["apologize","v","사과하다","apologize for ~ / apology 사과","We apologize for the delay.","지연에 대해 사과드립니다.","express regret"],
+["inconvenience","n","불편","apologize for any inconvenience","We regret any inconvenience this may cause.","이로 인한 불편에 유감을 표합니다.","trouble"],
+["assist","v","돕다","assist A with B / assistance 도움","Our staff will assist you with your bags.","직원이 가방 옮기는 것을 도와드릴 것이다.","help"],
+["courteous","adj","공손한","courteously 공손히 / courtesy 예의","Our staff are always courteous.","우리 직원은 항상 공손하다.","polite"],
+["representative","n","직원; 대표","customer service representative (-ive로 끝나는 명사)","A representative will call you back.","직원이 다시 전화드릴 것이다.","agent"],
+["replace","v","교체하다","replace A with B / replacement 교체품","We will replace the damaged item.","파손된 물품을 교체해 드리겠습니다.","substitute"],
+["compensate","v","보상하다","compensate A for B / compensation 보상","We will compensate you for the loss.","손실을 보상해 드리겠습니다.","reimburse"],
+["prompt","adj","신속한","promptly 신속히","Thank you for your prompt reply.","신속한 답변에 감사드립니다.","quick"],
+["patience","n","인내","thank you for your patience / patient 참을성 있는","Thank you for your patience.","기다려 주셔서 감사합니다.","tolerance"],
+["loyal","adj","충성스러운","loyal customers / loyalty program 고객 우대 제도","We reward our loyal customers.","단골 고객에게 보상한다.","faithful"],
+["assure","v","보증하다, 안심시키다","assure A that ~ A에게 ~을 보증하다","We assure you that it won't happen again.","다시는 일어나지 않을 것을 약속드립니다.","guarantee"],
+["address","v","(문제를) 처리하다","address a problem / address 주소","We will address your concerns promptly.","우려 사항을 신속히 처리하겠습니다.","deal with"],
+["helpful","adj","도움이 되는","= useful","The staff were very helpful.","직원들이 많이 도와주었다.","useful"],
+["contact","v","연락하다","contact + 목적어 (with 불필요)","Please contact us at any time.","언제든 연락해 주세요.","reach"]]}
+];
+/* ===== 단어장 DAY 11~30 (자체 제작) ===== */
+VOCA.push(
+{d:11,t:"출장·여행",w:[
+["itinerary","n","여행 일정표","travel itinerary","Your itinerary is attached to this e-mail.","여행 일정표를 이 이메일에 첨부했습니다.","schedule"],
+["accommodation","n","숙소","accommodations (복수형 자주) / accommodate 수용하다","The fee includes meals and accommodation.","요금에 식사와 숙소가 포함된다.","lodging"],
+["depart","v","출발하다","departure 출발 / depart from ~","The flight departs at 7 A.M.","비행기는 오전 7시에 출발한다.","leave"],
+["destination","n","목적지","final destination 최종 목적지","Paris is a popular tourist destination.","파리는 인기 관광지다.","goal"],
+["fare","n","요금(교통)","bus fare 버스 요금 / airfare 항공 요금","Airfares rise during the holidays.","연휴에는 항공 요금이 오른다.","fee"],
+["board","v","탑승하다","boarding pass 탑승권 / on board 탑승한","Passengers may now board the plane.","승객들은 이제 탑승하시면 됩니다.","get on"],
+["luggage","n","수하물","불가산명사 / = baggage","Each passenger may bring two pieces of luggage.","승객 1인당 수하물 2개를 가져올 수 있다.","baggage"],
+["reimburse","v","상환하다","reimbursement 상환 / reimburse A for B","Travel expenses will be reimbursed.","출장 경비는 상환된다.","pay back"],
+["expense","n","비용","travel expenses 출장 경비 / expensive 비싼","Keep receipts for all expenses.","모든 비용의 영수증을 보관하세요.","cost"],
+["delay","n","지연","be delayed 지연되다 / without delay 지체 없이","The flight had a two-hour delay.","비행기가 2시간 지연되었다.","postponement"],
+["confirm","v","확인하다","confirmation 확인(서)","Please confirm your reservation by Friday.","금요일까지 예약을 확인해 주세요.","verify"],
+["passenger","n","승객","passenger 사람 명사","All passengers must show their ID.","모든 승객은 신분증을 보여야 한다.","traveler"],
+["customs","n","세관","go through customs 세관을 통과하다","It took an hour to clear customs.","세관 통과에 한 시간이 걸렸다.","border control"],
+["round-trip","adj","왕복의","↔ one-way 편도의","I booked a round-trip ticket to Tokyo.","도쿄 왕복표를 예약했다.","return"],
+["layover","n","경유 대기","a two-hour layover","There is a short layover in Hong Kong.","홍콩에서 잠깐 경유 대기가 있다.","stopover"],
+["overseas","adv","해외로","travel overseas / overseas 해외의","He often travels overseas on business.","그는 출장으로 해외에 자주 간다.","abroad"],
+["voucher","n","쿠폰, 상품권","meal voucher 식사 쿠폰","Passengers received a meal voucher.","승객들이 식사 쿠폰을 받았다.","coupon"],
+["arrange","v","준비하다, 마련하다","arrange for A to V / arrangement 준비","We will arrange transportation from the airport.","공항에서의 교통편을 마련해 드리겠습니다.","organize"],
+["tourist","n","관광객","tourism 관광업","The museum attracts many tourists.","그 박물관에는 관광객이 많이 온다.",""],
+["valid","adj","유효한","valid passport 유효한 여권","Make sure your passport is valid.","여권이 유효한지 확인하세요.","current"]]},
+{d:12,t:"계약·협상",w:[
+["contract","n","계약(서)","sign a contract / contractor 계약자","Both parties signed the contract.","양측이 계약서에 서명했다.","agreement"],
+["negotiate","v","협상하다","negotiation 협상 / negotiate with A","We negotiated a lower price with the supplier.","공급업체와 더 낮은 가격으로 협상했다.","bargain"],
+["terms","n","조건","terms and conditions 약관 (복수형)","Please read the terms carefully.","조건을 꼼꼼히 읽어 주세요.","conditions"],
+["agreement","n","합의","reach an agreement 합의에 이르다","The two firms reached an agreement.","두 회사가 합의에 이르렀다.","deal"],
+["renew","v","갱신하다","renewal 갱신 (-al 명사)","We decided to renew the lease.","임대 계약을 갱신하기로 했다.","extend"],
+["expire","v","만료되다","expiration date 만료일","The contract expires at the end of May.","계약은 5월 말에 만료된다.","end"],
+["party","n","(계약) 당사자","both parties 양측","Both parties must agree to any changes.","변경은 양측이 모두 동의해야 한다.","side"],
+["clause","n","조항","a clause in the contract","The contract includes a cancellation clause.","계약서에 해지 조항이 있다.","provision"],
+["binding","adj","구속력 있는","legally binding 법적 구속력이 있는","This agreement is legally binding.","이 합의는 법적 구속력이 있다.","obligatory"],
+["proposal","n","제안(서)","-al로 끝나는 명사 / propose 제안하다","They accepted our proposal.","그들이 우리 제안을 받아들였다.","offer"],
+["compromise","n","타협","reach a compromise 타협하다","Both sides made a compromise.","양측이 타협했다.","middle ground"],
+["signature","n","서명","sign 서명하다 / signatory 서명자","Your signature is required on page 3.","3쪽에 서명이 필요합니다.","autograph"],
+["finalize","v","마무리하다","finalize the deal 거래를 마무리하다","We hope to finalize the deal this week.","이번 주에 거래를 마무리하길 바란다.","complete"],
+["obligation","n","의무","be under no obligation to V ~할 의무가 없다","You are under no obligation to buy.","구매할 의무는 없습니다.","duty"],
+["mutual","adj","상호의","mutual benefit 상호 이익","The deal is to our mutual benefit.","그 거래는 서로에게 이익이다.","shared"],
+["draft","v","작성하다","draft a contract 계약서 초안을 작성하다","The lawyer drafted the new contract.","변호사가 새 계약서를 작성했다.","prepare"],
+["terminate","v","종료하다","termination 종료","Either party may terminate the contract.","어느 쪽이든 계약을 해지할 수 있다.","end"],
+["amend","v","수정하다","amendment 수정 조항","The contract was amended to include a bonus.","보너스를 넣도록 계약서가 수정되었다.","revise"],
+["deadline","n","기한","extend the deadline 기한을 연장하다","The deadline was extended by a week.","기한이 일주일 연장되었다.","due date"],
+["stipulate","v","규정하다","The contract stipulates that ~","The contract stipulates that payment is due in 30 days.","계약서에 30일 내 지불을 규정하고 있다.","specify"]]},
+{d:13,t:"배송·물류",w:[
+["shipping","n","배송","shipping fee 배송료 / free shipping","Shipping is free on orders over $50.","50달러 넘게 주문하면 배송이 무료다.","delivery"],
+["package","n","소포","package 포장하다 / packaging 포장재","Your package was delivered this morning.","소포가 오늘 아침 배달되었다.","parcel"],
+["dispatch","v","발송하다","dispatch 발송","Orders are dispatched within 24 hours.","주문은 24시간 이내에 발송된다.","send"],
+["track","v","추적하다","tracking number 운송장 번호","You can track your order online.","온라인으로 주문을 추적할 수 있다.","trace"],
+["warehouse","n","창고","warehouse 사람 X / storage 보관","The goods are stored in our warehouse.","상품은 우리 창고에 보관되어 있다.","storehouse"],
+["freight","n","화물","freight charges 운송료","The freight will arrive by ship.","화물은 배로 도착한다.","cargo"],
+["courier","n","택배 회사; 배달원","by courier 택배로","The documents were sent by courier.","서류는 택배로 보냈다.","messenger"],
+["fragile","adj","깨지기 쉬운","handle with care 취급 주의","This box contains fragile items.","이 상자에는 깨지기 쉬운 물건이 있다.","delicate"],
+["expedite","v","신속히 처리하다","expedited shipping 빠른 배송","We can expedite your order for a small fee.","소액을 내면 주문을 빨리 처리해 드립니다.","speed up"],
+["carrier","n","운송 회사","shipping carrier 운송 업체","We use a reliable carrier.","믿을 수 있는 운송 회사를 이용한다.","transporter"],
+["en route","adv","도중에","en route to ~ ~로 가는 도중에","The truck is en route to Busan.","트럭이 부산으로 가는 중이다.","on the way"],
+["recipient","n","수령인","recipient 사람 명사 / receive 받다","The recipient must sign for the package.","수령인이 서명하고 소포를 받아야 한다.","receiver"],
+["estimated","adj","예상되는","estimated delivery date 예상 배송일","The estimated arrival time is 3 P.M.","예상 도착 시간은 오후 3시다.","expected"],
+["bulk","adj","대량의","bulk order 대량 주문","We offer discounts on bulk orders.","대량 주문에는 할인을 제공한다.","large-scale"],
+["load","v","싣다","↔ unload 내리다","Workers are loading boxes onto the truck.","작업자들이 트럭에 상자를 싣고 있다.","fill"],
+["supplier","n","공급업체","supply 공급하다","We changed suppliers last year.","작년에 공급업체를 바꿨다.","vendor"],
+["logistics","n","물류","logistics company 물류 회사","She works in logistics.","그녀는 물류 분야에서 일한다.","distribution"],
+["invoice","n","송장, 청구서","issue an invoice 청구서를 발행하다","The invoice is enclosed with the shipment.","송장이 화물과 함께 동봉되어 있다.","bill"],
+["enclose","v","동봉하다","enclosed please find ~ 동봉된 ~을 확인하세요","A catalog is enclosed with this letter.","이 편지에 카탈로그를 동봉했다.","include"],
+["destination","n","도착지","shipping destination","Delivery times vary by destination.","배송 시간은 도착지에 따라 다르다.","location"]]},
+{d:14,t:"숙박·식당",w:[
+["cuisine","n","요리","local cuisine 지역 요리","The restaurant serves Italian cuisine.","그 식당은 이탈리아 요리를 낸다.","food"],
+["menu","n","메뉴","seasonal menu 계절 메뉴","The menu changes every season.","메뉴는 계절마다 바뀐다.",""],
+["chef","n","요리사","head chef 주방장","The chef prepared a special dish.","요리사가 특별 요리를 준비했다.",""],
+["dine","v","식사하다","dining room 식당 / diner 식사하는 사람","Guests can dine on the terrace.","손님들은 테라스에서 식사할 수 있다.","eat"],
+["cater","v","음식을 공급하다","catering service 출장 요리 / cater to ~의 요구를 맞추다","A local firm catered the event.","지역 업체가 행사 음식을 맡았다.","provide food"],
+["vacancy","n","빈방; 공석","no vacancies 빈방 없음","The hotel has no vacancies this weekend.","그 호텔은 이번 주말 빈방이 없다.","opening"],
+["amenity","n","편의 시설","amenities (복수형 자주)","The hotel offers many amenities, including a pool.","그 호텔에는 수영장 등 편의 시설이 많다.","facility"],
+["check in","v","투숙 수속을 하다","↔ check out","Guests may check in after 2 P.M.","손님은 오후 2시 이후 체크인할 수 있다.","register"],
+["complimentary","adj","무료의","complimentary breakfast 무료 조식","A complimentary breakfast is served daily.","무료 조식이 매일 제공된다.","free"],
+["dietary","adj","식사의","dietary restrictions 식이 제한","Please tell us about any dietary restrictions.","식이 제한이 있으면 알려 주세요.","nutritional"],
+["beverage","n","음료","food and beverages 식음료","Beverages are not included in the price.","음료는 가격에 포함되지 않는다.","drink"],
+["patron","n","고객, 손님","patrons of the restaurant","The café is popular with local patrons.","그 카페는 지역 손님에게 인기다.","customer"],
+["specialty","n","전문 요리; 특산품","house specialty 대표 요리","Seafood is the house specialty.","해산물이 이 집 대표 요리다.","signature dish"],
+["portion","n","1인분, 몫","large portions 양이 많음","The portions here are generous.","이곳은 양이 넉넉하다.","serving"],
+["ingredient","n","재료","fresh ingredients 신선한 재료","We use only fresh ingredients.","신선한 재료만 사용한다.","component"],
+["suite","n","스위트룸","executive suite","The CEO stayed in the presidential suite.","CEO는 프레지덴셜 스위트에 묵었다.",""],
+["lobby","n","로비","hotel lobby","Let's meet in the lobby at noon.","정오에 로비에서 만나자.",""],
+["accommodate","v","수용하다","accommodate 100 guests","The hall can accommodate 100 guests.","그 홀은 100명을 수용할 수 있다.","hold"],
+["housekeeping","n","객실 청소 서비스","call housekeeping","Please call housekeeping for extra towels.","수건이 더 필요하면 객실 청소 서비스에 전화하세요.","cleaning service"],
+["gratuity","n","팁, 봉사료","gratuity included 봉사료 포함","A 10% gratuity is added to large groups.","단체 손님에게는 10% 봉사료가 붙는다.","tip"]]},
+{d:15,t:"수익·실적",w:[
+["revenue","n","수익, 매출","annual revenue 연간 매출","Revenue increased by 12 percent.","매출이 12% 늘었다.","income"],
+["profit","n","이익","profitable 수익성 있는 / net profit 순이익","The company made a record profit.","회사가 사상 최대 이익을 냈다.","earnings"],
+["quarter","n","분기","first quarter / quarterly 분기별의","Sales were strong in the third quarter.","3분기 매출이 좋았다.","three months"],
+["exceed","v","초과하다","exceed expectations 기대를 넘다","Sales exceeded our expectations.","매출이 기대를 넘었다.","surpass"],
+["target","n","목표","meet a target 목표를 달성하다","We met our sales target for the year.","올해 판매 목표를 달성했다.","goal"],
+["loss","n","손실","↔ profit / suffer a loss 손실을 보다","The branch reported a small loss.","그 지점은 소폭 손실을 발표했다.","deficit"],
+["figure","n","수치","sales figures 판매 수치","The latest figures show strong growth.","최신 수치는 강한 성장을 보여준다.","number"],
+["earnings","n","수익","quarterly earnings 분기 수익","Earnings rose despite higher costs.","비용 증가에도 수익이 늘었다.","profits"],
+["surpass","v","능가하다","surpass last year's record","This year's sales surpassed last year's.","올해 매출이 작년을 넘어섰다.","exceed"],
+["margin","n","이윤 폭","profit margin 이익률","Profit margins have narrowed.","이익률이 줄었다.","markup"],
+["achieve","v","달성하다","achievement 성취","The team achieved its goals early.","팀이 목표를 조기 달성했다.","accomplish"],
+["consistent","adj","일관된","consistently 꾸준히","The store has shown consistent growth.","그 매장은 꾸준히 성장해 왔다.","steady"],
+["projection","n","예상, 추정","sales projections 매출 전망","Sales were higher than projections.","매출이 예상보다 높았다.","forecast"],
+["dramatic","adj","극적인","dramatically 극적으로","There was a dramatic rise in profits.","이익이 극적으로 늘었다.","sharp"],
+["record","adj","기록적인","record high 사상 최고","Sales reached a record high.","매출이 사상 최고를 기록했다.","unprecedented"],
+["gain","n","증가, 이익","a gain in ~ ~의 증가","The company saw a gain in market share.","회사의 시장 점유율이 늘었다.","increase"],
+["shortfall","n","부족액","a shortfall in revenue","There was a shortfall in revenue this year.","올해 매출 부족분이 있었다.","deficit"],
+["outperform","v","능가하다","outperform competitors","Our new line outperformed competitors.","새 제품군이 경쟁사를 앞질렀다.","beat"],
+["annual report","n","연례 보고서","publish an annual report","The annual report will be published in March.","연례 보고서는 3월에 발간된다.",""],
+["generate","v","창출하다","generate revenue 수익을 창출하다","The new store generates high revenue.","새 매장이 높은 매출을 올린다.","produce"]]},
+{d:16,t:"회계·예산",w:[
+["budget","n","예산","on budget 예산 내에서 / over budget 예산 초과","The project was completed on budget.","프로젝트가 예산 내에서 끝났다.","allowance"],
+["account","n","계좌; 장부","accounting 회계 / accountant 회계사","Please check the account balance.","계좌 잔액을 확인하세요.","record"],
+["audit","n","회계 감사","auditor 감사관","The annual audit begins next week.","연례 감사가 다음 주에 시작된다.","inspection"],
+["allocate","v","할당하다","allocate A to B / allocation 할당","Funds were allocated to marketing.","자금이 마케팅에 배정되었다.","assign"],
+["expenditure","n","지출","capital expenditure 설비 투자","We need to reduce expenditure.","지출을 줄여야 한다.","spending"],
+["deduct","v","공제하다","deduction 공제","Taxes are deducted from your salary.","세금이 급여에서 공제된다.","subtract"],
+["balance","n","잔액","outstanding balance 미지급 잔액","Please pay the remaining balance.","남은 잔액을 지불하세요.","remainder"],
+["outstanding","adj","미지불의; 뛰어난","outstanding invoice 미지불 청구서","There are two outstanding invoices.","미지불 청구서가 두 건 있다.","unpaid"],
+["fiscal","adj","회계의","fiscal year 회계 연도","The fiscal year ends in March.","회계 연도는 3월에 끝난다.","financial"],
+["cost-effective","adj","비용 효율적인","a cost-effective solution","Online ads are more cost-effective.","온라인 광고가 비용 효율이 더 높다.","economical"],
+["overspend","v","초과 지출하다","overspend on ~","We overspent on travel this quarter.","이번 분기에 출장비를 초과 지출했다.","exceed budget"],
+["receipt","n","영수증","submit receipts for reimbursement","Submit all receipts to the accounting team.","모든 영수증을 회계팀에 제출하세요.","voucher"],
+["tax","n","세금","tax return 세금 신고 / taxable 과세 대상의","Prices include sales tax.","가격에 판매세가 포함되어 있다.","duty"],
+["payment","n","지불","make a payment / payment method","Payment is due within 30 days.","30일 이내에 지불해야 한다.","settlement"],
+["spreadsheet","n","스프레드시트","update the spreadsheet","The figures are in the attached spreadsheet.","수치는 첨부한 스프레드시트에 있다.",""],
+["approve","v","승인하다","approve A / approve of ~을 찬성하다","The director approved the budget.","이사가 예산을 승인했다.","authorize"],
+["reduce","v","줄이다","reduction 감소","We must reduce operating costs.","운영 비용을 줄여야 한다.","cut"],
+["financial","adj","재정의","financial statement 재무제표","The financial statements are ready.","재무제표가 준비되었다.","fiscal"],
+["accurate","adj","정확한","accuracy 정확성 / accurately","Please make sure the figures are accurate.","수치가 정확한지 확인하세요.","precise"],
+["surplus","n","흑자, 잉여","↔ deficit 적자","The city reported a budget surplus.","시가 예산 흑자를 발표했다.","excess"]]},
+{d:17,t:"회사 동향",w:[
+["merger","n","합병","merge 합병하다 / mergers and acquisitions","The merger created the largest firm in the industry.","합병으로 업계 최대 기업이 탄생했다.","consolidation"],
+["acquire","v","인수하다","acquisition 인수","The company acquired a small startup.","회사가 작은 신생 기업을 인수했다.","buy"],
+["restructure","v","구조 조정하다","restructuring 구조 조정","The firm plans to restructure its sales team.","회사가 영업팀을 구조 조정할 계획이다.","reorganize"],
+["subsidiary","n","자회사","↔ parent company 모회사","The bank opened a subsidiary in Vietnam.","그 은행은 베트남에 자회사를 세웠다.","affiliate"],
+["headquarters","n","본사","단수·복수 형태 같음","The headquarters will move to Seoul.","본사가 서울로 이전한다.","head office"],
+["branch","n","지점","branch office 지점","We will open a new branch in Ulsan.","울산에 새 지점을 연다.","office"],
+["relocate","v","이전하다","relocation 이전","The factory relocated to a larger site.","공장이 더 넓은 곳으로 이전했다.","move"],
+["announce","v","발표하다","announcement 발표","The CEO announced plans to expand.","CEO가 확장 계획을 발표했다.","declare"],
+["founder","n","창립자","found 설립하다 (find와 구분)","The founder started the company in 1990.","창립자는 1990년에 회사를 세웠다.","creator"],
+["establish","v","설립하다","established in ~ ~년 설립된","The firm was established in 2005.","그 회사는 2005년에 설립되었다.","found"],
+["partnership","n","제휴","form a partnership with ~","The two companies formed a partnership.","두 회사가 제휴를 맺었다.","alliance"],
+["executive","n","임원","-ive로 끝나는 명사 / executive 경영의","Three executives attended the meeting.","임원 세 명이 회의에 참석했다.","director"],
+["stake","n","지분","a 30 percent stake in ~","The firm bought a 30 percent stake in the startup.","회사가 신생 기업의 지분 30%를 샀다.","share"],
+["downsize","v","인원을 줄이다","downsizing 감원","The company downsized its workforce.","회사가 인력을 감축했다.","cut back"],
+["workforce","n","전 직원, 노동력","skilled workforce 숙련 인력","The company has a workforce of 500.","회사 직원은 500명이다.","staff"],
+["reputation","n","명성","reputation for ~ ~로 유명함","The firm has a reputation for quality.","그 회사는 품질로 명성이 있다.","standing"],
+["prominent","adj","유명한, 중요한","prominent figure 저명인사","She is a prominent business leader.","그녀는 저명한 경영인이다.","famous"],
+["diversify","v","다각화하다","diversification 다각화","The company is diversifying its products.","회사가 제품을 다각화하고 있다.","vary"],
+["anticipate","v","예상하다","anticipate V-ing / anticipation 기대","We anticipate strong demand next year.","내년에 수요가 강할 것으로 예상한다.","expect"],
+["oversee","v","감독하다","oversee a project","Ms. Kim will oversee the merger.","김 씨가 합병을 총괄한다.","supervise"]]},
+{d:18,t:"회의·발표",w:[
+["agenda","n","안건","on the agenda 안건에 있는","The budget is first on the agenda.","예산이 첫 번째 안건이다.","schedule"],
+["conference","n","회의, 학회","conference call 전화 회의","She will speak at the conference.","그녀는 학회에서 발표한다.","meeting"],
+["presentation","n","발표","give a presentation 발표하다","He gave a presentation on sales.","그는 매출에 관해 발표했다.","talk"],
+["minutes","n","회의록","take the minutes 회의록을 작성하다","Please read the minutes of the last meeting.","지난 회의록을 읽어 주세요.","record"],
+["discuss","v","논의하다","discuss + 목적어 (about 불가)","We will discuss the new policy.","새 정책을 논의할 것이다.","talk about"],
+["propose","v","제안하다","propose V-ing / propose that S (should) V","She proposed hiring more staff.","그녀가 직원을 더 뽑자고 제안했다.","suggest"],
+["consensus","n","합의","reach a consensus 합의에 이르다","The team reached a consensus.","팀이 합의에 이르렀다.","agreement"],
+["summarize","v","요약하다","summary 요약","Let me summarize the main points.","요점을 요약하겠습니다.","sum up"],
+["convene","v","소집하다","convene a meeting","The board will convene next week.","이사회가 다음 주에 소집된다.","assemble"],
+["adjourn","v","휴회하다","The meeting was adjourned.","The meeting was adjourned at 5 P.M.","회의가 오후 5시에 끝났다.","end"],
+["attendee","n","참석자","attend 참석하다 / attendance 참석","All attendees received a handout.","모든 참석자가 유인물을 받았다.","participant"],
+["handout","n","유인물","distribute handouts 유인물을 나눠주다","Please read the handout before the talk.","강연 전에 유인물을 읽으세요.","leaflet"],
+["brainstorm","v","아이디어를 모으다","brainstorming session","Let's brainstorm ideas for the campaign.","캠페인 아이디어를 모아 봅시다.","generate ideas"],
+["keynote","n","기조연설","keynote speaker 기조연설자","The keynote speaker is a famous economist.","기조연설자는 유명 경제학자다.","main speech"],
+["objective","n","목표","-ive로 끝나는 명사","The main objective is to cut costs.","주요 목표는 비용 절감이다.","goal"],
+["moderate","v","사회를 보다","moderator 사회자","Mr. Ito will moderate the discussion.","이토 씨가 토론 사회를 본다.","chair"],
+["feedback","n","의견","give feedback on ~","Please give feedback on my presentation.","제 발표에 의견을 주세요.","comments"],
+["clarify","v","명확히 하다","clarification 설명","Could you clarify the last point?","마지막 요점을 명확히 해 주시겠어요?","explain"],
+["outline","v","개요를 설명하다","outline 개요","She outlined the plan for next year.","그녀가 내년 계획의 개요를 설명했다.","summarize"],
+["unanimous","adj","만장일치의","unanimously 만장일치로","The decision was unanimous.","결정은 만장일치였다.","undisputed"]]},
+{d:19,t:"급여·복리후생",w:[
+["salary","n","급여","annual salary 연봉","The salary depends on experience.","급여는 경력에 따라 다르다.","pay"],
+["benefit","n","혜택, 복리후생","benefits package 복리후생 제도","Full-time staff receive health benefits.","정규직은 건강 보험 혜택을 받는다.","perk"],
+["wage","n","임금(시급)","minimum wage 최저 임금","The minimum wage will rise next year.","최저 임금이 내년에 오른다.","pay"],
+["raise","n","임금 인상","get a raise / raise 올리다(타동사)","She received a raise last month.","그녀는 지난달 임금이 인상되었다.","increase"],
+["bonus","n","상여금","performance bonus 성과급","Employees receive a year-end bonus.","직원들은 연말 보너스를 받는다.","reward"],
+["pension","n","연금","pension plan 연금 제도","The company offers a pension plan.","회사가 연금 제도를 제공한다.","retirement fund"],
+["incentive","n","장려금","incentive to V ~하는 동기","Bonuses are an incentive to work harder.","보너스는 더 열심히 일할 동기가 된다.","motivation"],
+["payroll","n","급여 대장","payroll department 급여 부서","Payroll is processed on the 25th.","급여는 25일에 처리된다.","salary list"],
+["leave","n","휴가","annual leave 연차 / on leave 휴가 중","She is on maternity leave.","그녀는 출산 휴가 중이다.","vacation"],
+["overtime","n","초과 근무","work overtime / overtime pay 초과 근무 수당","Overtime is paid at 1.5 times the normal rate.","초과 근무는 통상 임금의 1.5배로 지급된다.","extra hours"],
+["entitled","adj","자격이 있는","be entitled to N/V","Staff are entitled to 15 days of leave.","직원은 15일 휴가를 받을 자격이 있다.","eligible"],
+["compensation","n","보수, 보상","compensation package 보상 패키지","We offer competitive compensation.","경쟁력 있는 보수를 제공한다.","pay"],
+["perk","n","특전","job perks 직장 특전","Free lunch is one of the perks.","무료 점심은 특전 중 하나다.","benefit"],
+["retire","v","은퇴하다","retirement 은퇴 / retiree 퇴직자","Mr. Cho will retire next month.","조 씨가 다음 달 은퇴한다.","step down"],
+["insurance","n","보험","health insurance 건강 보험","The company pays for health insurance.","회사가 건강 보험료를 낸다.","coverage"],
+["flexible","adj","유연한","flexible hours 유연 근무 시간","We offer flexible working hours.","유연 근무 시간을 제공한다.","adaptable"],
+["morale","n","사기","boost morale 사기를 높이다","The bonus boosted employee morale.","보너스로 직원 사기가 높아졌다.","spirit"],
+["reward","v","보상하다","reward A for B","The company rewards hard work.","회사는 노력에 보상한다.","compensate"],
+["deduction","n","공제(액)","payroll deduction 급여 공제","Deductions are listed on the pay slip.","공제 내역은 급여 명세서에 나와 있다.","subtraction"],
+["wellness","n","건강","wellness program 건강 관리 프로그램","Our wellness program includes free yoga.","건강 프로그램에 무료 요가가 있다.","health"]]},
+{d:20,t:"인사 이동·평가",w:[
+["promotion","n","승진; 홍보","be promoted to ~ ~로 승진하다","She received a promotion to director.","그녀는 이사로 승진했다.","advancement"],
+["transfer","v","전근시키다","transfer A to B","He was transferred to the London office.","그는 런던 사무소로 전근되었다.","relocate"],
+["appoint","v","임명하다","appointment 임명; 약속","Ms. Park was appointed as CEO.","박 씨가 CEO로 임명되었다.","name"],
+["evaluate","v","평가하다","evaluation 평가","Managers evaluate staff twice a year.","관리자는 1년에 두 번 직원을 평가한다.","assess"],
+["successor","n","후임자","succeed 뒤를 잇다 / succession 계승","The board named his successor.","이사회가 그의 후임자를 지명했다.","replacement"],
+["resign","v","사임하다","resignation 사임","He resigned for personal reasons.","그는 개인 사정으로 사임했다.","quit"],
+["dedicated","adj","헌신적인","be dedicated to V-ing","She is a dedicated employee.","그녀는 헌신적인 직원이다.","committed"],
+["outstanding","adj","뛰어난","outstanding performance 뛰어난 성과","He won an award for outstanding service.","그는 뛰어난 공로로 상을 받았다.","excellent"],
+["recognize","v","인정하다","recognition 인정","The company recognized her achievements.","회사가 그녀의 성과를 인정했다.","acknowledge"],
+["contribution","n","기여","make a contribution to ~","Thank you for your contribution to the project.","프로젝트에 기여해 주셔서 감사합니다.","input"],
+["assess","v","평가하다","assessment 평가","We will assess your skills in the interview.","면접에서 역량을 평가할 것이다.","evaluate"],
+["capable","adj","유능한","be capable of V-ing","He is capable of leading the team.","그는 팀을 이끌 능력이 있다.","competent"],
+["leadership","n","지도력","under the leadership of ~","Sales grew under her leadership.","그녀가 이끄는 동안 매출이 늘었다.","guidance"],
+["vacancy","n","공석","fill a vacancy 공석을 채우다","There is a vacancy in the finance team.","재무팀에 공석이 있다.","opening"],
+["acknowledge","v","인정하다; 받았음을 알리다","acknowledge receipt of ~ ~을 받았음을 확인하다","Please acknowledge receipt of this letter.","이 편지를 받았는지 알려 주세요.","recognize"],
+["step down","v","물러나다","step down as CEO","He will step down as chairman.","그는 회장직에서 물러난다.","resign"],
+["predecessor","n","전임자","↔ successor 후임자","She is more experienced than her predecessor.","그녀는 전임자보다 경험이 많다.","forerunner"],
+["motivate","v","동기를 부여하다","motivation 동기 / motivated 의욕적인","Good managers motivate their teams.","좋은 관리자는 팀에 동기를 부여한다.","inspire"],
+["competent","adj","유능한","competence 능력","We need a competent accountant.","유능한 회계사가 필요하다.","capable"],
+["commend","v","칭찬하다","commend A for B","The mayor commended the volunteers.","시장이 자원봉사자들을 칭찬했다.","praise"]]},
+{d:21,t:"교통·통근",w:[
+["commute","v","통근하다","commuter 통근자 / commute 통근","She commutes to work by train.","그녀는 기차로 출퇴근한다.","travel"],
+["congestion","n","혼잡","traffic congestion 교통 체증","Traffic congestion is heavy downtown.","시내 교통 체증이 심하다.","traffic jam"],
+["detour","n","우회로","take a detour 우회하다","Drivers must take a detour.","운전자는 우회해야 한다.","diversion"],
+["route","n","경로","bus route 버스 노선","The bus route has changed.","버스 노선이 바뀌었다.","path"],
+["transit","n","대중교통; 운송","public transit 대중교통 / in transit 운송 중","Many workers use public transit.","많은 직장인이 대중교통을 이용한다.","transportation"],
+["vehicle","n","차량","parked vehicles 주차된 차량","Vehicles are parked along the street.","차량들이 길가에 주차되어 있다.","car"],
+["pedestrian","n","보행자","pedestrian crossing 횡단보도","The street is closed to all but pedestrians.","그 길은 보행자만 다닐 수 있다.","walker"],
+["construction","n","공사","under construction 공사 중","The road is under construction.","그 도로는 공사 중이다.","building work"],
+["fare","n","요금","subway fare 지하철 요금","Bus fares will rise next month.","버스 요금이 다음 달 오른다.","charge"],
+["timetable","n","시간표","train timetable","Check the timetable for departure times.","출발 시간은 시간표를 확인하세요.","schedule"],
+["alternate","adj","대체의","alternate route 대체 경로","Please use an alternate route.","다른 길을 이용해 주세요.","alternative"],
+["shuttle","n","셔틀버스","free shuttle service","A free shuttle runs every 20 minutes.","무료 셔틀이 20분마다 운행한다.","bus"],
+["intersection","n","교차로","at the intersection of A and B","Turn left at the next intersection.","다음 교차로에서 좌회전하세요.","crossroads"],
+["parking lot","n","주차장","parking garage 주차 건물","The parking lot is full.","주차장이 꽉 찼다.","car park"],
+["closure","n","폐쇄","road closure 도로 폐쇄","The bridge closure caused delays.","다리 폐쇄로 지연이 생겼다.","shutdown"],
+["accessible","adj","접근 가능한","accessible by subway 지하철로 갈 수 있는","The office is accessible by subway.","사무실은 지하철로 갈 수 있다.","reachable"],
+["carpool","v","카풀하다","carpool to work","Several employees carpool to work.","몇몇 직원이 카풀로 출근한다.","share a ride"],
+["toll","n","통행료","toll road 유료 도로","There is a toll on this highway.","이 고속도로에는 통행료가 있다.","fee"],
+["proceed","v","나아가다, 진행하다","proceed to ~ ~로 가다","Please proceed to gate 5.","5번 탑승구로 가세요.","continue"],
+["temporarily","adv","일시적으로","temporary 일시적인","The station is temporarily closed.","그 역은 일시적으로 폐쇄되었다.","for now"]]},
+{d:22,t:"은행·금융",w:[
+["deposit","v","예금하다","deposit 예금; 보증금 ↔ withdraw","I deposited the check this morning.","오늘 아침 수표를 입금했다.","put in"],
+["withdraw","v","인출하다","withdrawal 인출","You can withdraw cash at any ATM.","어느 ATM에서든 현금을 인출할 수 있다.","take out"],
+["transaction","n","거래","online transaction 온라인 거래","Each transaction is recorded.","모든 거래가 기록된다.","deal"],
+["statement","n","명세서","bank statement 입출금 내역서","Your monthly statement is available online.","월별 명세서는 온라인에서 볼 수 있다.","report"],
+["loan","n","대출","apply for a loan 대출을 신청하다","The bank approved the loan.","은행이 대출을 승인했다.","credit"],
+["interest","n","이자","interest rate 금리","Interest rates rose this year.","올해 금리가 올랐다.","return"],
+["transfer","v","송금하다","transfer funds 자금을 이체하다","Please transfer the money by Friday.","금요일까지 돈을 이체해 주세요.","send"],
+["currency","n","통화","foreign currency 외화","You can exchange currency at the airport.","공항에서 환전할 수 있다.","money"],
+["fee","n","수수료","transaction fee 거래 수수료","There is no fee for online transfers.","온라인 이체는 수수료가 없다.","charge"],
+["overdue","adj","기한이 지난","overdue payment 연체된 지불","Your payment is overdue.","결제 기한이 지났습니다.","late"],
+["credit","n","신용, 외상","credit card / on credit 외상으로","We accept all major credit cards.","주요 신용카드를 모두 받습니다.","loan"],
+["verify","v","확인하다","verification 확인","Please verify your identity.","본인 확인을 해 주세요.","confirm"],
+["mortgage","n","주택 담보 대출","take out a mortgage","They took out a mortgage to buy a house.","그들은 집을 사려고 담보 대출을 받았다.","home loan"],
+["savings","n","저축","savings account 저축 예금","She opened a savings account.","그녀는 저축 예금 계좌를 열었다.","funds"],
+["fraud","n","사기","credit card fraud","Report any fraud immediately.","사기는 즉시 신고하세요.","scam"],
+["installment","n","할부(금)","pay in installments 할부로 내다","You can pay in monthly installments.","월 할부로 낼 수 있다.","part payment"],
+["funds","n","자금","raise funds 자금을 모으다","The company raised funds for expansion.","회사가 확장 자금을 모았다.","money"],
+["exchange rate","n","환율","the current exchange rate","The exchange rate changes daily.","환율은 매일 바뀐다.","rate"],
+["balance","v","결산하다","balance the books 장부를 맞추다","The accountant balanced the books.","회계사가 장부를 맞췄다.","settle"],
+["secure","adj","안전한","security 보안 / secure 확보하다","Online banking is safe and secure.","온라인 뱅킹은 안전하다.","safe"]]},
+{d:23,t:"투자·주식",w:[
+["invest","v","투자하다","invest in ~ / investment 투자 / investor","The firm invested in new technology.","회사가 신기술에 투자했다.","fund"],
+["stock","n","주식; 재고","stock market 주식 시장 / in stock 재고 있는","Stock prices rose sharply.","주가가 급등했다.","share"],
+["shareholder","n","주주","shareholders' meeting 주주총회","Shareholders will vote on the merger.","주주들이 합병에 대해 투표한다.","stockholder"],
+["dividend","n","배당금","pay a dividend","The company pays dividends twice a year.","회사는 1년에 두 번 배당금을 준다.","payout"],
+["portfolio","n","투자 자산 구성","diversify a portfolio","She has a diverse portfolio.","그녀는 다양한 투자 자산을 갖고 있다.","holdings"],
+["asset","n","자산","↔ liability 부채","The company's assets are worth $2 million.","회사 자산은 200만 달러 가치다.","property"],
+["risk","n","위험","at risk 위험에 처한 / risky 위험한","High returns often involve high risk.","높은 수익에는 높은 위험이 따른다.","danger"],
+["return","n","수익(률)","return on investment (ROI)","The investment produced a good return.","그 투자는 좋은 수익을 냈다.","yield"],
+["capital","n","자본","raise capital 자본을 모으다","The startup needs more capital.","그 신생 기업은 자본이 더 필요하다.","funds"],
+["volatile","adj","변동성이 큰","volatility 변동성","The market has been volatile.","시장 변동성이 컸다.","unstable"],
+["venture","n","벤처, 모험적 사업","joint venture 합작 투자","The two firms started a joint venture.","두 회사가 합작 사업을 시작했다.","enterprise"],
+["valuation","n","가치 평가","company valuation","The startup's valuation doubled.","그 신생 기업의 가치가 두 배가 되었다.","assessment"],
+["prospect","n","전망","prospects for growth 성장 전망","The prospects for the industry are good.","그 산업 전망이 좋다.","outlook"],
+["lucrative","adj","수익성이 좋은","a lucrative business","Online sales proved to be lucrative.","온라인 판매가 수익성이 좋은 것으로 드러났다.","profitable"],
+["speculate","v","추측하다; 투기하다","speculation 추측","Analysts speculate about a merger.","분석가들이 합병을 추측한다.","guess"],
+["equity","n","자기 자본, 지분","equity investment","He owns equity in the company.","그는 그 회사의 지분을 갖고 있다.","ownership"],
+["plunge","v","급락하다","plunge by 20%","Shares plunged after the announcement.","발표 후 주가가 급락했다.","drop"],
+["soar","v","급등하다","soaring prices 치솟는 가격","Profits soared last year.","작년에 이익이 치솟았다.","rise sharply"],
+["stake","n","지분","hold a stake in ~","The bank holds a stake in the firm.","그 은행이 회사 지분을 갖고 있다.","share"],
+["broker","n","중개인","stockbroker 주식 중개인","Ask your broker before investing.","투자 전에 중개인에게 물어보세요.","agent"]]},
+{d:24,t:"건물·부동산",w:[
+["property","n","부동산; 재산","property manager 부동산 관리인","The property is for sale.","그 부동산은 매물로 나와 있다.","real estate"],
+["lease","n","임대 계약","sign a lease / lease 임대하다","The lease runs for two years.","임대 계약 기간은 2년이다.","rental agreement"],
+["tenant","n","세입자","↔ landlord 집주인","Tenants must pay rent by the 5th.","세입자는 5일까지 월세를 내야 한다.","renter"],
+["landlord","n","집주인","landlord ↔ tenant","The landlord repaired the heater.","집주인이 난방기를 고쳤다.","owner"],
+["rent","n","임대료","rent 빌리다 / rental 임대","The rent includes utilities.","임대료에 공과금이 포함되어 있다.","rental fee"],
+["renovate","v","개조하다","renovation 개조, 보수","The lobby was renovated last year.","로비가 작년에 개조되었다.","refurbish"],
+["spacious","adj","넓은","spacious office 넓은 사무실","The new office is bright and spacious.","새 사무실은 밝고 넓다.","roomy"],
+["occupy","v","차지하다, 입주하다","occupancy 입주율 / occupant 거주자","The company occupies the top floor.","회사가 꼭대기 층을 쓰고 있다.","inhabit"],
+["real estate","n","부동산","real estate agent 부동산 중개인","She works as a real estate agent.","그녀는 부동산 중개인으로 일한다.","property"],
+["vacant","adj","비어 있는","vacancy 빈방, 공석","The building has been vacant for years.","그 건물은 몇 년째 비어 있다.","empty"],
+["utilities","n","공과금","utilities included 공과금 포함","Utilities are included in the rent.","공과금은 임대료에 포함된다.","services"],
+["residential","adj","주거의","residential area 주거 지역 / resident 주민","The park is in a residential area.","그 공원은 주거 지역에 있다.","domestic"],
+["commercial","adj","상업의","commercial building 상업용 건물","The area is zoned for commercial use.","그 지역은 상업용 지구다.","business"],
+["inspection","n","점검","building inspection 건물 점검","The building passed the safety inspection.","그 건물은 안전 점검을 통과했다.","examination"],
+["blueprint","n","설계도","architect's blueprint","The architect showed us the blueprints.","건축가가 설계도를 보여주었다.","plan"],
+["architect","n","건축가","architecture 건축","The architect designed a modern museum.","그 건축가가 현대식 박물관을 설계했다.","designer"],
+["contractor","n","시공업자","building contractor","We hired a contractor to build the extension.","증축을 위해 시공업자를 고용했다.","builder"],
+["premises","n","부지, 구내","on the premises 구내에서 (복수형)","Smoking is not allowed on the premises.","구내에서는 흡연이 금지된다.","grounds"],
+["furnished","adj","가구가 갖춰진","fully furnished apartment","The apartment is fully furnished.","그 아파트는 가구가 모두 갖춰져 있다.","equipped"],
+["relocate","v","이사하다","relocation 이전","We are relocating to a bigger office.","더 큰 사무실로 이전한다.","move"]]},
+{d:25,t:"환경·에너지",w:[
+["environment","n","환경","environmental 환경의 / environmentally friendly","We must protect the environment.","환경을 보호해야 한다.","nature"],
+["recycle","v","재활용하다","recycling 재활용 / recyclable","Please recycle paper and plastic.","종이와 플라스틱을 재활용하세요.","reuse"],
+["emission","n","배출","carbon emissions 탄소 배출","The plant reduced its emissions.","그 공장은 배출량을 줄였다.","discharge"],
+["renewable","adj","재생 가능한","renewable energy","The town uses renewable energy.","그 마을은 재생 에너지를 쓴다.","sustainable"],
+["conserve","v","보존하다, 아끼다","conservation 보존","Turn off lights to conserve energy.","에너지를 아끼려면 불을 끄세요.","save"],
+["sustainable","adj","지속 가능한","sustainability 지속 가능성","We use sustainable materials.","지속 가능한 소재를 사용한다.","eco-friendly"],
+["pollution","n","오염","pollute 오염시키다","Air pollution is a serious problem.","대기 오염은 심각한 문제다.","contamination"],
+["consumption","n","소비","energy consumption / consume 소비하다","We cut energy consumption by 20%.","에너지 소비를 20% 줄였다.","use"],
+["dispose","v","처리하다","dispose of ~ / disposal 처리","Dispose of batteries properly.","배터리는 올바르게 처리하세요.","discard"],
+["waste","n","쓰레기; 낭비","waste disposal 쓰레기 처리","The factory reduced its waste.","공장이 폐기물을 줄였다.","garbage"],
+["solar","adj","태양의","solar panels 태양광 패널","Solar panels were installed on the roof.","지붕에 태양광 패널이 설치되었다.",""],
+["efficient","adj","효율적인","energy-efficient 에너지 효율이 높은","Replace old bulbs with efficient ones.","오래된 전구를 효율적인 것으로 바꾸세요.","economical"],
+["preserve","v","보존하다","preservation 보존","The park preserves local wildlife.","그 공원은 지역 야생 동물을 보존한다.","protect"],
+["hazardous","adj","위험한","hazardous waste 유해 폐기물","Hazardous materials must be labeled.","위험 물질에는 표시를 해야 한다.","dangerous"],
+["initiative","n","계획, 운동","-ive로 끝나는 명사 / green initiative","The city launched a green initiative.","시가 친환경 계획을 시작했다.","program"],
+["reduce","v","줄이다","reduce waste / reduction","We aim to reduce plastic use.","플라스틱 사용을 줄이는 게 목표다.","cut"],
+["climate","n","기후","climate change 기후 변화","Climate change affects farming.","기후 변화가 농업에 영향을 준다.",""],
+["eco-friendly","adj","친환경적인","= environmentally friendly","The hotel uses eco-friendly products.","그 호텔은 친환경 제품을 쓴다.","green"],
+["regulation","n","규제","environmental regulations","New emission regulations take effect in 2027.","새 배출 규제가 2027년에 시행된다.","rule"],
+["resource","n","자원","natural resources 천연자원","Water is a valuable resource.","물은 귀중한 자원이다.","supply"]]},
+{d:26,t:"건강·의료",w:[
+["appointment","n","예약, 약속","make an appointment 예약하다","I have a dental appointment at 3.","3시에 치과 예약이 있다.","booking"],
+["patient","n","환자","patient 참을성 있는 (형용사)","The doctor is seeing a patient.","의사가 환자를 진료 중이다.","case"],
+["prescription","n","처방전","prescribe 처방하다","Bring your prescription to the pharmacy.","처방전을 약국에 가져가세요.","medication order"],
+["symptom","n","증상","symptoms of ~","Common symptoms include fever.","흔한 증상으로 열이 있다.","sign"],
+["clinic","n","병원, 진료소","medical clinic","The clinic is open on Saturdays.","그 병원은 토요일에도 연다.","medical center"],
+["physician","n","내과 의사","consult a physician 의사와 상담하다","Consult your physician before exercising.","운동 전에 의사와 상담하세요.","doctor"],
+["pharmacy","n","약국","pharmacist 약사","The pharmacy is next to the hospital.","약국은 병원 옆에 있다.","drugstore"],
+["treatment","n","치료","treat 치료하다","The treatment takes three weeks.","치료는 3주 걸린다.","therapy"],
+["checkup","n","건강 검진","annual checkup 연례 검진","Employees get a free annual checkup.","직원은 연례 검진을 무료로 받는다.","examination"],
+["recover","v","회복하다","recovery 회복","She recovered quickly from the surgery.","그녀는 수술 후 빨리 회복했다.","get better"],
+["medication","n","약물","take medication 약을 복용하다","Take this medication twice a day.","이 약을 하루 두 번 드세요.","medicine"],
+["nutrition","n","영양","nutritious 영양가 있는","Good nutrition is important for health.","좋은 영양은 건강에 중요하다.","diet"],
+["fitness","n","건강, 체력","fitness center 헬스장","The hotel has a fitness center.","그 호텔에는 헬스장이 있다.",""],
+["surgery","n","수술","undergo surgery 수술을 받다","He had knee surgery last month.","그는 지난달 무릎 수술을 받았다.","operation"],
+["diagnose","v","진단하다","diagnosis 진단","The doctor diagnosed the problem quickly.","의사가 문제를 빨리 진단했다.","identify"],
+["insurance","n","보험","medical insurance 의료 보험","Does your insurance cover dental care?","보험이 치과 치료를 보장하나요?","coverage"],
+["emergency","n","응급","emergency room 응급실","Call 119 in an emergency.","응급 시 119에 전화하세요.","crisis"],
+["dose","n","복용량","daily dose 1일 복용량","Do not exceed the recommended dose.","권장 복용량을 넘기지 마세요.","amount"],
+["hygiene","n","위생","hygienic 위생적인","Good hygiene prevents illness.","위생을 잘 지키면 병이 예방된다.","cleanliness"],
+["practitioner","n","개업의","general practitioner (GP) 일반의","See a general practitioner first.","먼저 일반의에게 진료받으세요.","doctor"]]},
+{d:27,t:"시설 관리·수리",w:[
+["repair","v","수리하다","under repair 수리 중 / repair 수리","The elevator is being repaired.","엘리베이터가 수리 중이다.","fix"],
+["maintenance","n","유지 보수","maintenance staff 관리 직원","Maintenance will be done on Saturday.","보수 작업은 토요일에 한다.","upkeep"],
+["install","v","설치하다","installation 설치","New lights were installed in the hall.","복도에 새 조명이 설치되었다.","set up"],
+["leak","n","누수","a leak in the roof / leak 새다","There is a leak in the ceiling.","천장에 물이 샌다.","drip"],
+["replace","v","교체하다","replace A with B / replacement","The old carpet will be replaced.","낡은 카펫은 교체될 것이다.","change"],
+["facility","n","시설","facilities manager 시설 관리자","The facility will be closed for repairs.","시설은 수리 때문에 문을 닫는다.","building"],
+["technician","n","기술자","repair technician","A technician will check the printer.","기술자가 프린터를 점검할 것이다.","mechanic"],
+["inspect","v","점검하다","inspection 점검","The fire alarms are inspected monthly.","화재경보기는 매달 점검된다.","check"],
+["out of order","adj","고장 난","= broken","The copy machine is out of order.","복사기가 고장 났다.","broken"],
+["renovation","n","보수 공사","under renovation 보수 중","The cafeteria is closed for renovation.","구내식당은 보수 공사로 문을 닫았다.","remodeling"],
+["shut down","v","정지하다","shutdown 정지","The system will shut down at midnight.","시스템은 자정에 정지된다.","turn off"],
+["interruption","n","중단","service interruption 서비스 중단","We apologize for the interruption in service.","서비스 중단을 사과드립니다.","disruption"],
+["adjust","v","조절하다","adjustment 조정","You can adjust the temperature here.","여기서 온도를 조절할 수 있다.","regulate"],
+["ventilation","n","환기","ventilation system 환기 장치","The ventilation system needs cleaning.","환기 장치를 청소해야 한다.","airflow"],
+["electrical","adj","전기의","electrical outlet 전기 콘센트","An electrical problem caused the outage.","전기 문제로 정전이 발생했다.","electric"],
+["outage","n","정전, 중단","power outage 정전","The power outage lasted two hours.","정전이 두 시간 계속되었다.","blackout"],
+["plumbing","n","배관","plumber 배관공","The plumbing in the building is old.","건물 배관이 낡았다.","pipes"],
+["routine","adj","정기적인","routine maintenance 정기 보수","This is routine maintenance.","이것은 정기 보수 작업이다.","regular"],
+["restore","v","복구하다","restoration 복구","Power was restored by noon.","정오까지 전력이 복구되었다.","bring back"],
+["malfunction","v","오작동하다","malfunction 오작동","The heater malfunctioned overnight.","밤사이 난방기가 오작동했다.","break down"]]},
+{d:28,t:"교육·연수",w:[
+["training","n","교육, 연수","training session 교육 시간 / trainee 교육생","All new staff must complete training.","모든 신입 직원은 교육을 받아야 한다.","instruction"],
+["workshop","n","워크숍","attend a workshop","The workshop covers time management.","그 워크숍은 시간 관리를 다룬다.","seminar"],
+["instructor","n","강사","instruct 가르치다 / instruction 지시","The instructor has 10 years of experience.","강사는 경력이 10년이다.","teacher"],
+["enroll","v","등록하다","enroll in ~ / enrollment 등록","Over 50 employees enrolled in the course.","50명 넘는 직원이 강좌에 등록했다.","register"],
+["seminar","n","세미나","hold a seminar","A seminar on leadership is scheduled for May.","리더십 세미나가 5월로 예정되어 있다.","workshop"],
+["orientation","n","오리엔테이션","new employee orientation","Orientation begins at 9 A.M. on Monday.","오리엔테이션은 월요일 오전 9시에 시작한다.","introduction"],
+["certificate","n","수료증, 자격증","certification 인증 / certified 공인된","Participants will receive a certificate.","참가자는 수료증을 받는다.","credential"],
+["skill","n","기술, 능력","skilled 숙련된","The course will improve your writing skills.","그 강좌는 작문 능력을 높여줄 것이다.","ability"],
+["curriculum","n","교육 과정","course curriculum","The curriculum includes online lessons.","교육 과정에 온라인 수업이 있다.","syllabus"],
+["tuition","n","수업료","tuition fees / tuition reimbursement","The company pays tuition for job-related courses.","회사가 직무 관련 강좌 수업료를 내준다.","fee"],
+["session","n","시간, 회기","training session","The next session starts at 2 P.M.","다음 시간은 오후 2시에 시작한다.","period"],
+["mentor","n","멘토","mentoring program","Each new hire is assigned a mentor.","신입 직원마다 멘토가 배정된다.","adviser"],
+["hands-on","adj","실습의","hands-on experience 실무 경험","The course offers hands-on training.","그 강좌는 실습 교육을 제공한다.","practical"],
+["comprehensive","adj","포괄적인","comprehensive guide","We provide comprehensive training.","포괄적인 교육을 제공한다.","thorough"],
+["prerequisite","n","선수 조건","prerequisite for ~","Basic Excel skills are a prerequisite.","기본 엑셀 능력이 선수 조건이다.","requirement"],
+["acquire","v","습득하다","acquire skills 기술을 습득하다","Trainees acquire new skills quickly.","교육생들은 새 기술을 빨리 익힌다.","gain"],
+["lecture","n","강의","give a lecture 강의하다","The lecture was recorded.","강의가 녹화되었다.","talk"],
+["materials","n","자료","course materials 강의 자료","Course materials will be e-mailed.","강의 자료는 이메일로 보낸다.","resources"],
+["completion","n","수료, 완료","upon completion of ~ ~을 마치면","Upon completion, you will receive a certificate.","수료하면 수료증을 받는다.","finish"],
+["evaluate","v","평가하다","evaluation form 평가지","Please evaluate the workshop.","워크숍을 평가해 주세요.","assess"]]},
+{d:29,t:"IT·기술",w:[
+["software","n","소프트웨어","install software / 불가산명사","Please update your software.","소프트웨어를 업데이트하세요.",""],
+["password","n","비밀번호","reset a password","Change your password every three months.","비밀번호를 3개월마다 바꾸세요.",""],
+["access","n","접근(권한)","have access to ~ / access + 목적어 (동사)","You need permission to access the files.","파일에 접근하려면 권한이 필요하다.","entry"],
+["database","n","데이터베이스","customer database","Customer data is stored in a database.","고객 정보는 데이터베이스에 저장된다.",""],
+["download","v","내려받다","↔ upload","You can download the manual from our site.","사이트에서 설명서를 내려받을 수 있다.","save"],
+["technical","adj","기술적인","technical support 기술 지원","Contact technical support for help.","도움이 필요하면 기술 지원팀에 연락하세요.","technological"],
+["glitch","n","작은 결함","a technical glitch","A glitch caused the Web site to crash.","작은 결함으로 웹사이트가 멈췄다.","bug"],
+["upgrade","n","업그레이드","system upgrade","The system upgrade will take two hours.","시스템 업그레이드는 두 시간 걸린다.","update"],
+["device","n","기기","mobile device 모바일 기기","The app works on all devices.","그 앱은 모든 기기에서 작동한다.",""],
+["backup","n","백업","back up 백업하다 (동사)","Make a backup of important files.","중요 파일을 백업하세요.","copy"],
+["user","n","사용자","user-friendly 사용하기 쉬운","The program is very user-friendly.","그 프로그램은 쓰기 매우 쉽다.",""],
+["network","n","네트워크","network connection","The office network is down.","사무실 네트워크가 끊겼다.",""],
+["troubleshoot","v","문제를 해결하다","troubleshooting 문제 해결","The IT team troubleshoots computer problems.","IT팀이 컴퓨터 문제를 해결한다.","fix"],
+["encrypt","v","암호화하다","encryption 암호화","All data is encrypted for security.","모든 데이터는 보안을 위해 암호화된다.","encode"],
+["interface","n","인터페이스","user interface","The new interface is easier to use.","새 화면이 쓰기 더 쉽다.","layout"],
+["virtual","adj","가상의","virtual meeting 화상 회의","We held a virtual meeting.","화상 회의를 했다.","online"],
+["storage","n","저장(공간)","cloud storage","The service offers free cloud storage.","그 서비스는 무료 클라우드 저장 공간을 제공한다.","space"],
+["outdated","adj","구식의","outdated equipment","The office computers are outdated.","사무실 컴퓨터가 구식이다.","obsolete"],
+["launch","v","실행하다; 출시하다","launch an app","Click here to launch the program.","여기를 누르면 프로그램이 실행된다.","start"],
+["integrate","v","통합하다","integration 통합","The new system integrates all our data.","새 시스템이 모든 데이터를 통합한다.","combine"]]},
+{d:30,t:"지역사회·공공",w:[
+["community","n","지역 사회","community center 주민 센터","The library serves the local community.","도서관은 지역 사회에 봉사한다.","neighborhood"],
+["resident","n","주민","residential 주거의 / reside 거주하다","Residents may park for free.","주민은 무료로 주차할 수 있다.","inhabitant"],
+["donation","n","기부","donate 기부하다 / donor 기부자","Donations will help the shelter.","기부금은 보호소에 도움이 될 것이다.","contribution"],
+["fundraiser","n","모금 행사","fundraising 모금","The school held a fundraiser.","학교가 모금 행사를 열었다.","charity event"],
+["charity","n","자선 단체","charitable 자선의","All proceeds go to charity.","수익금 전액이 자선 단체로 간다.","foundation"],
+["municipal","adj","시의","municipal government 시 정부","The municipal library opens at 9.","시립 도서관은 9시에 연다.","city"],
+["council","n","의회","city council 시의회","The city council approved the plan.","시의회가 그 계획을 승인했다.","board"],
+["public","adj","공공의","public transportation / in public","The park is open to the public.","공원은 일반인에게 개방된다.","communal"],
+["sponsor","v","후원하다","sponsor 후원자 / sponsorship","Local firms sponsored the marathon.","지역 기업들이 마라톤을 후원했다.","support"],
+["proceeds","n","수익금","the proceeds from ~ (복수형)","The proceeds from the sale went to charity.","판매 수익금은 자선 단체로 갔다.","profits"],
+["initiative","n","계획","community initiative","The initiative aims to clean up parks.","그 계획은 공원 정화를 목표로 한다.","project"],
+["contribute","v","기여하다","contribute to ~ / contribution 기여","Volunteers contributed to the project.","자원봉사자들이 프로젝트에 기여했다.","give"],
+["landmark","n","명소","historic landmark 역사적 명소","The tower is a famous landmark.","그 탑은 유명한 명소다.","monument"],
+["survey","n","조사","resident survey 주민 설문","The city conducted a resident survey.","시가 주민 설문을 했다.","poll"],
+["ordinance","n","조례","city ordinance 시 조례","A new ordinance bans plastic bags.","새 조례가 비닐봉지를 금지한다.","regulation"],
+["facility","n","시설","public facilities 공공시설","The new sports facility opened last week.","새 체육 시설이 지난주 열었다.","center"],
+["mayor","n","시장","the mayor's office","The mayor spoke at the opening ceremony.","시장이 개막식에서 연설했다.",""],
+["urge","v","촉구하다","urge A to V","Officials urged residents to save water.","관계자들이 주민들에게 물 절약을 촉구했다.","encourage"],
+["benefit","v","이익을 주다","benefit from ~ ~로 이익을 얻다","The new park will benefit residents.","새 공원은 주민에게 도움이 될 것이다.","help"],
+["outreach","n","봉사 활동","community outreach 지역 봉사","The company runs a community outreach program.","회사는 지역 봉사 프로그램을 운영한다.","service"]]}
+);
 /* ===================== 문제 은행 ===================== */
 const BANK=[],LCB=[],RCB=[],BYID={},BROKEN=[];let EXTRA=0;
 const UID={};UNITS.forEach((u,i)=>{UID[u.id]=u;u.ix=i});
@@ -728,8 +1411,8 @@ NEWQ.forEach(q=>addQ(Object.assign({},q),"g","노트"));
 function normalize(r){
  const b=blankState();if(!r||typeof r!=="object")return b;
  const o=Object.assign(b,r);
- ["qs","days","wd"].forEach(k=>{if(!o[k]||typeof o[k]!=="object"||Array.isArray(o[k]))o[k]={}});
- ["log","unk","adapt","mocks","scores"].forEach(k=>{if(!Array.isArray(o[k]))o[k]=[]});
+ ["qs","days","wd","vq"].forEach(k=>{if(!o[k]||typeof o[k]!=="object"||Array.isArray(o[k]))o[k]={}});
+ ["log","unk","adapt","mocks","scores","vlog","myw"].forEach(k=>{if(!Array.isArray(o[k]))o[k]=[]});
  o.settings=Object.assign(blankState().settings,o.settings||{});
  if(![10,15,20].includes(+o.settings.size))o.settings.size=15;
  if(!/^\d{4}-\d{2}-\d{2}$/.test(o.exam))o.exam="2026-12-27";
@@ -748,6 +1431,7 @@ function migrateV1(){
 }
 function selfCheck(){
  const issues=[];let fixed=0;
+ if(typeof vMyRebuild==="function"){vMyRebuild();VBROKEN.forEach(id=>issues.push("단어 "+id+" 제외: 형식 오류"));Object.keys(S.vq).forEach(id=>{if(!VBYID[id]){delete S.vq[id];fixed++}});if(S.vlog.length>800)S.vlog=S.vlog.slice(-800)}
  BROKEN.forEach(b=>issues.push("문제 "+b.id+" ("+b.src+") 제외: "+b.why));
  Object.keys(S.qs).forEach(id=>{const v=S.qs[id];
   if(!BYID[id]){delete S.qs[id];fixed++;return}
@@ -766,7 +1450,7 @@ function selfCheck(){
   if(!S.cur.items.length||S.cur.d!==TODAY&&S.cur.stage!=="done"&&S.cur.i===0){S.cur=null}}
  Object.keys(S.days).forEach(d=>{const x=S.days[d];if(!x||typeof x!=="object"||!/^\d{4}-\d{2}-\d{2}$/.test(d)){delete S.days[d];fixed++}});
  if(!LOCAL_OK)issues.push("이 브라우저는 기기 저장이 막혀 있음 (클라우드 저장만 사용)");
- S.health={d:TODAY,ts:Date.now(),ver:APP_VER,issues,fixed,bank:{grammar:BANK.length,lc:LCB.length,rc:RCB.length,extra:EXTRA,broken:BROKEN.length}};
+ S.health={d:TODAY,ts:Date.now(),ver:APP_VER,issues,fixed,bank:{grammar:BANK.length,lc:LCB.length,rc:RCB.length,extra:EXTRA,broken:BROKEN.length,voca:typeof VW!=="undefined"?VW.length:0}};
  return S.health;
 }
 
@@ -820,6 +1504,9 @@ function mergeStates(a,b){
  m.mocks=uni(O.mocks,m.mocks,e=>JSON.stringify(e));
  m.scores=uni(O.scores,m.scores,e=>e.d+"|"+e.lc+"|"+e.rc).sort((x,y)=>x.d<y.d?-1:1);
  m.wpos=Math.max(O.wpos||0,m.wpos||0);
+ Object.entries(O.vq).forEach(([id,v])=>{const w=m.vq[id];if(!w||(v.n||0)>(w.n||0))m.vq[id]=v});
+ m.vlog=uni(O.vlog,m.vlog,e=>e.t+"|"+e.id+"|"+e.k).sort((x,y)=>x.t-y.t).slice(-800);
+ m.myw=uni(O.myw,m.myw,e=>e.id);
  m.updatedAt=Math.max(a.updatedAt||0,b.updatedAt||0);
  return m;
 }
@@ -958,9 +1645,9 @@ function buildSession(opt){
   rankPool(LCB.filter(q=>!used.has(q.id))).slice(0,2).forEach(q=>take(q,"듣기"));
   if(hasRC){const px=rankPool(RCB)[0];if(px)RCB.filter(q=>q.px===px.px).slice(0,2).forEach(q=>take(q,"독해"))}
  }
- const wds=[];const dueW=WORDS.filter(w=>S.wd[w[0]]&&!S.wd[w[0]].k&&S.wd[w[0]].due<=TODAY);
- dueW.slice(0,p.words).forEach(w=>wds.push(w[0]));
- let wp=S.wpos||0,g=0;while(wds.length<p.words&&g++<WORDS.length){const w=WORDS[wp%WORDS.length][0];wp++;if(!S.wd[w]&&!wds.includes(w))wds.push(w)}
+ const wds=vDue().slice(0,p.words).map(o=>o.id);let wp=S.wpos||0;
+ const cd=vCurrentDay();vDayWords(cd).filter(o=>!S.vq[o.id]).forEach(o=>{if(wds.length<p.words&&!wds.includes(o.id))wds.push(o.id)});
+ VW.filter(o=>o.day>0&&!S.vq[o.id]).forEach(o=>{if(wds.length<p.words&&!wds.includes(o.id))wds.push(o.id)});
  return {d:TODAY,kind:opt.unit?"unit":"daily",unit:opt.unit||p.focus,why:opt.unit?"직접 고른 단원":p.why,items,i:0,stage:(opt.unit||p.lessonFirst)?"lesson":"q",ans:{},sl:{},err:{},ms:{},retried:{},words:opt.unit?[]:wds,wi:0,wk:0,flip:false,t0:Date.now(),speed:p.speed,slot:p.slot,wpos:wp};
 }
 
@@ -980,7 +1667,7 @@ function setErr(qid,err){for(let i=S.log.length-1;i>=0;i--){if(S.log[i].id===qid
 
 /* ===================== 화면: 공통 ===================== */
 function show(v){document.body.classList.toggle("running",v==="run"&&!!S.cur&&S.cur.stage!=="done");document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===v||(v==="run"&&b.dataset.v==="home")));document.querySelectorAll(".view").forEach(s=>s.hidden=s.id!=="v-"+v);try{sessionStorage.setItem("tab2",v)}catch(e){}window.scrollTo(0,0);
- if(v==="stats")renderStats();if(v==="notes")renderNotes();if(v==="set")renderSet();if(v==="home")renderHome();if(v==="run")renderRun()}
+ if(v==="stats")renderStats();if(v==="voca")renderVoca();if(v==="notes")renderNotes();if(v==="set")renderSet();if(v==="home")renderHome();if(v==="run")renderRun()}
 document.querySelector("nav").addEventListener("click",e=>{const b=e.target.closest("button");if(b)show(b.dataset.v)});
 function chip(m){const l=lvl(m);return `<span class="lv ${l[1]}">${l[0]}${m!=null?" "+m+"%":""}</span>`}
 function streak(){let n=0,d=TODAY;if(!S.days[d])d=addDays(d,-1);while(S.days[d]&&S.days[d].n>0){n++;d=addDays(d,-1)}return n}
@@ -1008,6 +1695,7 @@ function renderHome(){
  <div class="card"><div class="row" style="justify-content:space-between"><h2>프로그램이 바꾼 것</h2><button class="btn small ghost" data-go="stats">분석 보기</button></div>
   ${recent.length?`<ul class="alog">${recent.map(a=>`<li><span class="mono note">${a.d.slice(5).replace("-","/")}</span> ${esc(a.m)}</li>`).join("")}</ul>`:`<p class="empty">세션을 풀면 기록을 분석해서 다음 세션 구성을 스스로 바꿉니다. 바뀐 내용이 여기에 쌓여요.</p>`}
  </div>
+ <div class="card"><div class="row" style="justify-content:space-between"><h2>단어</h2><button class="btn small" data-go="voca">단어장 열기</button></div><p class="note" style="margin:0">DAY ${vCurrentDay()} 진행 중 · 외운 단어 ${VW.filter(o=>o.day>0&&vMastered(o.id)).length}/${VW.filter(o=>o.day>0).length} · 오늘 복습 ${vDue().length}개</p></div>
  <div class="card"><h2>약점 TOP 3</h2>${weakList(3)}</div>`;
 }
 function weakList(k){
@@ -1043,9 +1731,9 @@ function renderRun(){
   <div class="sbar">${c.items.map((it,i)=>`<i class="${i<c.i?(c.ans[i]===BYID[it.id].a?"d":"x"):i===c.i&&c.stage==="q"?"c":""}"></i>`).join("")}</div></div>`;
  if(c.stage==="lesson"){A.innerHTML=top+noteHTML(c.unit,true)+`<div class="actbar"><div class="in"><button class="btn" id="rLessonDone">노트 확인 → 문제 시작</button></div></div>`;return}
  if(c.stage==="words"){
-  const w=c.words[c.wi],W=WORDS.find(x=>x[0]===w);
-  if(!W){A.innerHTML=top+`<div class="card"><h2>단어 완료</h2><p style="margin:0">알아요 ${c.wk} / ${c.words.length}</p><div class="actbar"><div class="in"><button class="btn" id="rFinish">결과 보기</button></div></div></div>`;return}
-  A.innerHTML=top+`<div class="card"><div class="row" style="justify-content:space-between"><h2>단어</h2><span class="mono note">${c.wi+1} / ${c.words.length}</span></div><button class="flash" id="rFlip"><div><div class="en">${esc(W[0])}</div>${c.flip?`<div class="ko">${esc(W[1])}</div>`:`<div class="note">탭해서 뜻 보기</div>`}</div></button><div class="actbar"><div class="in"><button class="btn ghost" id="rUnk">몰라요</button><button class="btn" id="rKnow">알아요</button></div></div></div>`;return}
+  const o=VBYID[c.words[c.wi]];
+  if(!o){A.innerHTML=top+`<div class="card"><h2>단어 완료</h2><p style="margin:0">알아요 ${c.wk} / ${c.words.length}</p><div class="actbar"><div class="in"><button class="btn" id="rFinish">결과 보기</button></div></div></div>`;return}
+  A.innerHTML=top+`<div class="card"><div class="row" style="justify-content:space-between"><h2>단어</h2><span class="mono note">${c.wi+1} / ${c.words.length}</span></div><button class="flash vflash" id="rFlip"><div><div class="en">${esc(o.w)}</div><div class="note">DAY ${o.day} · ${esc(o.pos)}</div>${c.flip?`<div class="ko">${esc(o.ko)}</div>${o.pt?`<div class="vpt">${esc(o.pt)}</div>`:""}${o.ex?`<div class="vex">${esc(o.ex)}<br><span class="note">${esc(o.exk)}</span></div>`:""}`:`<div class="note">탭해서 뜻 보기</div>`}</div></button><div class="actbar"><div class="in"><button class="btn ghost" id="rUnk">몰라요</button><button class="btn" id="rKnow">알아요</button></div></div></div>`;return}
  if(c.stage==="done"){document.body.classList.remove("running");A.innerHTML=top+resultHTML();return}
  const q=curQ(),it=c.items[c.i],i=c.i,pk=c.ans[i],needSlot=q.kind==="g"&&c.slot&&q.r&&c.sl[i]==null&&!it.rt;
  const qu=q.kind==="g"?UID[q.u]:null;
@@ -1090,9 +1778,8 @@ $("#v-run").addEventListener("click",e=>{
  if(b.id==="rLessonDone"){c.stage="q";save();renderRun();window.scrollTo(0,0);return}
  if(b.id==="rNext"){c.scr=false;if(c.i+1<c.items.length){c.i++}else{c.stage=c.words.length?"words":"done";if(c.stage==="done")finishRun()}save();renderRun();window.scrollTo(0,0);return}
  if(b.id==="rFlip"||b.closest("#rFlip")){c.flip=!c.flip;renderRun();return}
- if(b.id==="rKnow"||b.id==="rUnk"){const w=c.words[c.wi];
-  if(b.id==="rKnow"){c.wk++;S.wd[w]={k:1,due:addDays(TODAY,14)};S.unk=S.unk.filter(x=>x!==w)}
-  else{S.wd[w]={k:0,due:addDays(TODAY,1)};if(!S.unk.includes(w))S.unk.push(w)}
+ if(b.id==="rKnow"||b.id==="rUnk"){const o=VBYID[c.words[c.wi]];
+  if(o)vRecord(o,b.id==="rKnow",null);if(b.id==="rKnow")c.wk++;
   c.wi++;c.flip=false;save();renderRun();return}
  if(b.id==="rFinish"){c.stage="done";finishRun();save();renderRun();return}
  if(b.id==="rAgain"){startRun();return}
@@ -1150,6 +1837,7 @@ function renderStats(){
   <div><span class="lbl">정답 평균 시간</span><b class="mono">${avg==null?"-":avg+"초"}</b></div>
   <div><span class="lbl">연속 학습</span><b class="mono">${streak()}일</b></div></div>
   <p class="note" style="margin:0">Part 5 예상 정답: ${acc==null?"기록 부족":"약 "+Math.round(acc*0.3)+" / 30 (추정: 최근 정답률 × 30)"} · 목표는 문항당 20초 이내</p></div>`;
+ h+=vStatsHTML();
  h+=`<div class="card"><h2>단원별 실력</h2><p class="note" style="margin:0">최근 20문제 기준, 최근 것일수록 크게 반영. 3문제 미만은 미학습.</p><div class="bars">${UNITS.map(u=>{const s=unitStat(u.id),l=lvl(s.m);return `<button class="brow" data-unit="${u.id}"><span class="bn">${esc(u.n)}</span><span class="bt"><i class="${l[1]}" style="width:${s.m||0}%"></i></span><span class="bv mono">${s.m==null?"-":s.m+"%"}</span></button>`}).join("")}</div></div>`;
  h+=`<div class="card chart"><h2>최근 14일</h2>${trendSVG()}</div>`;
  const slotRows=SLOTS.map(s=>{const L2=S.log.filter(x=>(x.sl===0||x.sl===1)&&BYID[x.id]&&BYID[x.id].r===s[0]);return [s,L2.length,L2.length?Math.round(L2.filter(x=>x.sl).length/L2.length*100):null]});
@@ -1187,7 +1875,18 @@ function renderStrat(){
   <li><b>어휘 문제 → 짝 단어</b><span>앞뒤 단어와 짝(comply with, take effect)부터. 모르면 10초 안에 찍고 표시.</span></li>
  </ol>
  <div class="tbl"><table><thead><tr><th>파트</th><th style="text-align:right">목표 시간</th></tr></thead><tbody><tr><td>Part 5 (30문항)</td><td class="n">10분</td></tr><tr><td>Part 6 (16문항)</td><td class="n">8분</td></tr><tr><td>Part 7 (54문항)</td><td class="n">55분</td></tr></tbody></table></div>
- <p class="note" style="margin:0">준비물: 신분증 · 연필 · 지우개 · 아날로그 시계. 전자기기 반입 제한.</p></div>`;
+ <p class="note" style="margin:0">준비물: 신분증 · 연필 · 지우개 · 아날로그 시계. 전자기기 반입 제한.</p></div>
+ <div class="card"><h2>Part 6·7 질문 유형별 전략</h2><div class="tbl"><table><thead><tr><th>유형</th><th>질문 모양</th><th>푸는 법</th></tr></thead><tbody>
+  <tr><td>Part 6 단어·문법</td><td>빈칸 1개 + 보기 4개</td><td>Part 5처럼 자리 판단. 단, 시제·대명사는 앞뒤 문장까지 확인</td></tr>
+  <tr><td>Part 6 문장 고르기</td><td>빈칸에 들어갈 문장</td><td>빈칸 앞뒤 문장의 지시어(this, they)·연결어(however)와 이어지는 것</td></tr>
+  <tr><td>주제·목적</td><td>What is the purpose of ~?</td><td>첫 2~3문장. 마지막 단락의 요청도 확인</td></tr>
+  <tr><td>육하원칙</td><td>When / Where / What ~?</td><td>질문 키워드를 지문에서 찾고 그 문장만 읽기</td></tr>
+  <tr><td>NOT·True</td><td>What is (NOT) mentioned/true?</td><td>보기 4개를 지문과 하나씩 대조해 지우기</td></tr>
+  <tr><td>추론</td><td>What is suggested / most likely?</td><td>지문 근거 + 한 단계만 추론. 지나친 확대 해석 X</td></tr>
+  <tr><td>의도 파악</td><td>What does X mean when he writes "~"?</td><td>바로 앞 메시지에 대한 반응으로 해석</td></tr>
+  <tr><td>문장 위치</td><td>[1]~[4] 중 문장이 들어갈 곳</td><td>주어진 문장의 대명사·연결어가 가리킬 대상이 바로 앞에 있는 곳</td></tr>
+  <tr><td>동의어</td><td>"X" is closest in meaning to</td><td>사전 뜻이 아니라 문맥 뜻으로. 단어장의 'Part 7 동의어' 테스트로 연습</td></tr>
+ </tbody></table></div></div>`;
 }
 
 /* ===================== 설정 · 자가 점검 ===================== */
@@ -1245,7 +1944,7 @@ $("#v-set").addEventListener("click",async e=>{
   const keep={exam:S.exam,scores:S.scores,mocks:S.mocks};S=normalize(Object.assign(blankState(),keep));adaptLog("기록 초기화");selfCheck();save();renderAll();return}
 });
 
-function renderAll(){renderHome();renderStrat();renderNotes();if(!$("#v-stats").hidden)renderStats();if(!$("#v-set").hidden)renderSet();if(!$("#v-run").hidden)renderRun();try{renderMock();renderLog()}catch(e){}renderSync()}
+function renderAll(){if(typeof vMyRebuild==="function")vMyRebuild();renderVoca();renderHome();renderStrat();renderNotes();if(!$("#v-stats").hidden)renderStats();if(!$("#v-set").hidden)renderSet();if(!$("#v-run").hidden)renderRun();try{renderMock();renderLog()}catch(e){}renderSync()}
 
 document.addEventListener("keydown",e=>{
  if($("#v-run").hidden||!S.cur||e.target.closest("input,textarea,select")||e.metaKey||e.ctrlKey||e.altKey)return;
@@ -1257,6 +1956,186 @@ document.addEventListener("keydown",e=>{
  else if(k==="enter"||k===" ")el=A.querySelector("#rNext,#rLessonDone,#rFinish");
  if(el){e.preventDefault();el.click()}
 });
+/* ===================== 단어장 (기출 보카식 30일 + 내 단어장) ===================== */
+const VW=[],VBYID={},VBROKEN=[];
+function vAdd(x,day,id,src){
+ const o={id,day,w:x[0],pos:x[1]||"",ko:x[2],pt:x[3]||"",ex:x[4]||"",exk:x[5]||"",syn:x[6]||"",src};
+ if(!o.w||!o.ko||VBYID[id]){VBROKEN.push(id);return}
+ VW.push(o);VBYID[id]=o;
+}
+VOCA.forEach(d=>d.w.forEach((x,i)=>vAdd(x,d.d,"v"+d.d+"-"+i,"기본")));
+const VDAYS=VOCA.map(d=>({d:d.d,t:d.t}));
+function vMyRebuild(){
+ for(let i=VW.length-1;i>=0;i--)if(VW[i].day===0){delete VBYID[VW[i].id];VW.splice(i,1)}
+ (S.myw||[]).forEach(m=>vAdd([m.w,m.pos,m.ko,m.pt,m.ex,"",m.syn],0,m.id,"내 단어"));
+}
+const VTYPE={m:"뜻 고르기",r:"단어 고르기",b:"Part 5 어휘 빈칸",s:"Part 7 동의어"};
+function vStat(id){return S.vq[id]}
+function vMastered(id){const v=S.vq[id];return !!v&&v.box>=3}
+function vDayWords(day){return VW.filter(x=>x.day===day)}
+function vRecord(o,ok,k){
+ const v=S.vq[o.id]||{n:0,c:0,box:0,due:TODAY,last:TODAY};v.n++;if(ok)v.c++;v.last=TODAY;
+ const IV=[0,1,2,4,7,15];
+ if(ok){v.box=Math.min(5,(v.box||0)+1);v.due=addDays(TODAY,IV[v.box])}else{v.box=1;v.due=addDays(TODAY,1)}
+ S.vq[o.id]=v;
+ if(k){S.vlog.push({t:Date.now(),d:TODAY,id:o.id,k,ok:ok?1:0});if(S.vlog.length>800)S.vlog=S.vlog.slice(-800)}
+}
+function vDue(){return VW.filter(o=>S.vq[o.id]&&S.vq[o.id].due<=TODAY).sort((a,b)=>S.vq[a.id].box-S.vq[b.id].box)}
+function vCurrentDay(){for(const d of VDAYS){const ws=vDayWords(d.d);if(ws.some(o=>!vMastered(o.id)))return d.d}return VDAYS[VDAYS.length-1].d}
+/* --- 문제 만들기 --- */
+function inflect(w,f){
+ if(f==="ing"){if(/ie$/.test(w))return w.slice(0,-2)+"ying";if(/[^e]e$/.test(w))return w.slice(0,-1)+"ing";return w+"ing"}
+ if(f==="ed"){if(/e$/.test(w))return w+"d";if(/[^aeiou]y$/.test(w))return w.slice(0,-1)+"ied";return w+"ed"}
+ if(f==="s"){if(/(s|x|sh|ch)$/.test(w))return w+"es";if(/[^aeiou]y$/.test(w))return w.slice(0,-1)+"ies";return w+"s"}
+ return w;
+}
+function vFindToken(o){
+ const ex=o.ex;if(!ex)return null;const w=o.w.toLowerCase();
+ if(w.includes(" ")||w.includes("-")){const i=ex.toLowerCase().indexOf(w);return i<0?null:{i,len:w.length,form:""}}
+ const re=/[A-Za-zÀ-ÿ'-]+/g;let m;
+ while((m=re.exec(ex))){const t=m[0].toLowerCase();
+  if(t===w)return {i:m.index,len:m[0].length,form:""};
+  for(const f of ["s","ed","ing"])if(inflect(w,f)===t)return {i:m.index,len:m[0].length,form:f};
+ }
+ return null;
+}
+function vPick(arr,k,ex){const a=shuffle(arr.filter(x=>!ex.includes(x)));return a.slice(0,k)}
+function vMakeQ(o,k,pool){
+ const same=pool.filter(x=>x.id!==o.id);
+ const others=same.length>=8?same:VW.filter(x=>x.id!==o.id);
+ if(k==="b"){
+  const tk=vFindToken(o);
+  const cand=others.filter(x=>x.pos===o.pos&&!/[ -]/.test(x.w)&&x.w.toLowerCase()!==o.w.toLowerCase()).map(x=>x.w);
+  if(tk&&cand.length>=3&&!/[ -]/.test(o.w)){
+   const ds=vPick([...new Set(cand)],3,[o.w]).map(w=>inflect(w,tk.form));
+   const right=o.ex.substr(tk.i,tk.len),cap=/^[A-Z]/.test(right);
+   const fix=s=>cap?s[0].toUpperCase()+s.slice(1):s;
+   const opts=shuffle([right,...ds.map(fix)]);
+   return {k,o,stem:o.ex.slice(0,tk.i)+"____"+o.ex.slice(tk.i+tk.len),c:opts,a:opts.indexOf(right)};
+  }
+  k="m";
+ }
+ if(k==="s"){
+  const sy=others.map(x=>x.syn).filter(s=>s&&s!==o.syn&&s.toLowerCase()!==o.w.toLowerCase());
+  if(o.syn&&sy.length>=3){
+   const opts=shuffle([o.syn,...vPick([...new Set(sy)],3,[o.syn])]);
+   const tk=vFindToken(o);
+   const sent=tk?esc(o.ex.slice(0,tk.i))+"<u><b>"+esc(o.ex.substr(tk.i,tk.len))+"</b></u>"+esc(o.ex.slice(tk.i+tk.len)):esc(o.ex);
+   return {k,o,stemHTML:sent,q:`밑줄 친 "${o.ex.substr(tk?tk.i:0,tk?tk.len:0)||o.w}"와 뜻이 가장 가까운 것은?`,c:opts,a:opts.indexOf(o.syn)};
+  }
+  k="m";
+ }
+ if(k==="r"){
+  const ds=vPick([...new Set(others.map(x=>x.w))],3,[o.w]);const opts=shuffle([o.w,...ds]);
+  return {k,o,q:o.ko,c:opts,a:opts.indexOf(o.w)};
+ }
+ const ds=vPick([...new Set(others.map(x=>x.ko))],3,[o.ko]);const opts=shuffle([o.ko,...ds]);
+ return {k:"m",o,q:o.w,c:opts,a:opts.indexOf(o.ko)};
+}
+function vBuildTest(words,poolForDistractors,n){
+ const ks=["m","r","b","s"],L2=shuffle(words.slice()).slice(0,n||20);
+ return L2.map((o,i)=>{const pref=ks[i%4];return vMakeQ(o,pref,poolForDistractors)});
+}
+/* --- 화면 --- */
+let VV={view:"list",day:1,hide:false,mode:null,card:null,test:null};
+function speakWord(t){try{const sy=window.speechSynthesis;if(!sy)return;sy.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="en-US";u.rate=.85;sy.speak(u)}catch(e){}}
+function vDayChip(d){const ws=vDayWords(d),m=ws.filter(o=>vMastered(o.id)).length,seen=ws.filter(o=>S.vq[o.id]).length;return {m,seen,n:ws.length}}
+function renderVoca(){
+ const A=$("#v-voca");if(!A)return;
+ if(VV.mode==="card")return renderVCard(A);
+ if(VV.mode==="test")return renderVTest(A);
+ if(VV.view==="day")return renderVDay(A);
+ const due=vDue(),cur=vCurrentDay(),mastered=VW.filter(o=>o.day>0&&vMastered(o.id)).length,total=VW.filter(o=>o.day>0).length;
+ const vl=S.vlog.slice(-60),acc=vl.length?Math.round(vl.filter(x=>x.ok).length/vl.length*100):null;
+ A.innerHTML=`<div class="card sscard"><div class="row" style="justify-content:space-between"><span class="lbl">단어 공부</span><span class="note mono">외운 단어 ${mastered} / ${total}</span></div>
+  <div class="big">DAY ${cur} · ${esc((VDAYS.find(x=>x.d===cur)||{}).t||"")}</div>
+  <p class="note" style="margin:0">주제별 30일 구성 · 단어마다 뜻·출제포인트·예문·유의어 · 테스트는 뜻 고르기 / 단어 고르기 / Part 5 어휘 빈칸 / Part 7 동의어${acc!=null?" · 최근 정답률 "+acc+"%":""}</p>
+  <div class="row"><button class="btn" data-vday="${cur}">DAY ${cur} 공부하기</button>${due.length?`<button class="btn ghost" id="vDueTest">복습 테스트 (${Math.min(due.length,20)})</button>`:""}</div></div>
+ <div class="card"><h2>30일 단어장</h2><p class="note" style="margin:0">초록 = 외운 단어 비율(연속 3번 이상 맞힘)</p><div class="vgrid">${VDAYS.map(d=>{const c=vDayChip(d.d);return `<button class="vtile${d.d===cur?" cur":""}" data-vday="${d.d}"><span class="mono">DAY ${String(d.d).padStart(2,"0")}</span><b>${esc(d.t)}</b><span class="vbar"><i style="width:${c.n?Math.round(c.m/c.n*100):0}%"></i></span><span class="note mono">${c.m}/${c.n}</span></button>`}).join("")}
+  <button class="vtile my" data-vday="0"><span class="mono">MY</span><b>내 단어장</b><span class="note">책에서 직접 추가</span><span class="note mono">${vDayWords(0).length}개</span></button></div></div>`;
+}
+function renderVDay(A){
+ const d=VV.day,ws=vDayWords(d),th=d===0?"내 단어장":(VDAYS.find(x=>x.d===d)||{}).t;
+ let h=`<div class="row"><button class="btn small ghost" id="vBack">← 단어장</button></div>
+ <div class="card"><div class="row" style="justify-content:space-between"><span class="lbl">${d===0?"MY":"DAY "+String(d).padStart(2,"0")}</span><span class="note mono">${ws.filter(o=>vMastered(o.id)).length}/${ws.length} 외움</span></div><h2>${esc(th)}</h2>
+  <div class="row">${ws.length?`<button class="btn" id="vCard">암기 카드</button><button class="btn" id="vTest">테스트 ${Math.min(20,ws.length)}문제</button>`:""}<button class="btn small ghost" id="vHide" aria-pressed="${VV.hide}">${VV.hide?"뜻 보이기":"뜻 가리기"}</button></div></div>`;
+ if(d===0)h+=`<div class="card"><h2>단어 추가</h2><p class="note" style="margin:0">교재(예: 기출 보카)에서 외울 단어를 직접 넣으면 같은 방식으로 카드·테스트에 나옵니다.</p>
+  <div class="vform"><input id="mwW" placeholder="단어 (예: comply)" autocomplete="off"><input id="mwK" placeholder="뜻 (예: 준수하다)" autocomplete="off"><input id="mwE" placeholder="예문 (선택)" autocomplete="off"><input id="mwS" placeholder="유의어 (선택)" autocomplete="off"></div>
+  <div class="row"><button class="btn small" id="mwAdd">추가</button><span class="note" id="mwMsg"></span></div></div>`;
+ h+=`<div class="card vlist">${ws.length?ws.map(o=>{const v=S.vq[o.id];return `<div class="vrow"><div class="vw"><button class="spk" data-say="${esc(o.w)}" aria-label="발음 듣기">▶</button><b>${esc(o.w)}</b><span class="note">${esc(o.pos)}</span>${v?`<span class="vdot b${Math.min(v.box,5)}" title="복습 단계 ${v.box}"></span>`:""}${d===0?`<button class="btn small ghost" data-mwdel="${o.id}">삭제</button>`:""}</div>
+  <div class="vko${VV.hide?" hid":""}" data-reveal>${esc(o.ko)}</div>
+  ${o.pt?`<div class="vpt"><span class="fixtag ok">출제포인트</span> ${esc(o.pt)}</div>`:""}
+  ${o.ex?`<div class="vex">${esc(o.ex)}${o.exk?`<span class="note${VV.hide?" hid":""}" data-reveal> ${esc(o.exk)}</span>`:""}</div>`:""}
+  ${o.syn?`<div class="note">유의어: ${esc(o.syn)}</div>`:""}</div>`}).join(""):`<p class="empty">아직 단어가 없습니다.</p>`}</div>`;
+ A.innerHTML=h;
+}
+function renderVCard(A){
+ const c=VV.card,o=VBYID[c.ids[c.i]];
+ if(!o){A.innerHTML=`<div class="card"><h2>카드 완료</h2><p style="margin:0">알아요 ${c.k} / ${c.ids.length}</p><div class="row"><button class="btn" id="vTest">이어서 테스트</button><button class="btn ghost" id="vExit">단어 목록</button></div></div>`;return}
+ A.innerHTML=`<div class="card"><div class="row" style="justify-content:space-between"><span class="lbl">암기 카드 · ${c.i+1}/${c.ids.length}</span><button class="btn small ghost" id="vExit">그만하기</button></div>
+ <button class="flash vflash" id="vFlip"><div><div class="en">${esc(o.w)}</div><div class="note">${esc(o.pos)}</div>${c.flip?`<div class="ko">${esc(o.ko)}</div>${o.pt?`<div class="vpt">${esc(o.pt)}</div>`:""}${o.ex?`<div class="vex">${esc(o.ex)}<br><span class="note">${esc(o.exk)}</span></div>`:""}${o.syn?`<div class="note">유의어: ${esc(o.syn)}</div>`:""}`:`<div class="note">탭해서 뜻 보기</div>`}</div></button>
+ <div class="row"><button class="btn small ghost spk2" data-say="${esc(o.w)}">▶ 발음</button></div>
+ <div class="actbar"><div class="in"><button class="btn ghost" id="vUnk">몰라요</button><button class="btn" id="vKnow">알아요</button></div></div></div>`;
+}
+function renderVTest(A){
+ const t=VV.test,q=t.qs[t.i];
+ if(!q){const ok=t.ans.filter((a,i)=>a===t.qs[i].a).length,per={};t.qs.forEach((x,i)=>{per[x.k]=per[x.k]||[0,0];per[x.k][1]++;if(t.ans[i]===x.a)per[x.k][0]++});
+  const wrong=t.qs.filter((x,i)=>t.ans[i]!==x.a);
+  A.innerHTML=`<div class="card"><div class="res"><div class="big mono">${ok}<span style="font-size:20px">/${t.qs.length}</span></div><div class="note">${esc(t.title)}</div></div>
+  <div class="tbl"><table><thead><tr><th>유형</th><th style="text-align:right">정답</th></tr></thead><tbody>${Object.entries(per).map(([k,v])=>`<tr><td>${VTYPE[k]}</td><td class="n">${v[0]}/${v[1]}</td></tr>`).join("")}</tbody></table></div>
+  ${wrong.length?`<h3>틀린 단어 (내일 복습에 다시 나옴)</h3><div class="tbl"><table><tbody>${wrong.map(x=>`<tr><td><b>${esc(x.o.w)}</b></td><td>${esc(x.o.ko)}</td><td class="note">${esc(x.o.pt)}</td></tr>`).join("")}</tbody></table></div>`:""}
+  <div class="row"><button class="btn" id="vRetry">${wrong.length?"틀린 단어만 다시":"한 번 더"}</button><button class="btn ghost" id="vExit">단어 목록</button></div></div>`;return}
+ const pk=t.ans[t.i];
+ let stem="";
+ if(q.k==="m")stem=`<div class="vq"><span class="tagc">${VTYPE.m}</span><div class="vbig">${esc(q.q)}</div><button class="btn small ghost spk2" data-say="${esc(q.o.w)}">▶ 발음</button></div>`;
+ else if(q.k==="r")stem=`<div class="vq"><span class="tagc">${VTYPE.r}</span><div class="vbig">${esc(q.q)}</div></div>`;
+ else if(q.k==="b")stem=`<div class="vq"><span class="tagc">${VTYPE.b}</span><div class="q-stem">${esc(q.stem).replace("____",pk==null?'<span class="blank">빈칸</span>':`<span class="blank on${pk===q.a?" ok":" ng"}">${esc(q.c[pk])}</span>`)}</div></div>`;
+ else stem=`<div class="vq"><span class="tagc">${VTYPE.s}</span><div class="q-stem">${q.stemHTML}</div><b>${esc(q.q)}</b></div>`;
+ A.innerHTML=`<div class="card qcard"><div class="row" style="justify-content:space-between"><span class="lbl">${esc(t.title)} · ${t.i+1}/${t.qs.length}</span><button class="btn small ghost" id="vExit">그만하기</button></div>
+ <div class="sbar">${t.qs.map((x,i)=>`<i class="${i<t.i?(t.ans[i]===x.a?"d":"x"):i===t.i?"c":""}"></i>`).join("")}</div>
+ ${stem}
+ <div class="choices">${q.c.map((x,j)=>{let cl="";if(pk!=null){if(j===q.a)cl=" right";else if(j===pk)cl=" wrong"}return `<button class="choice${cl}" data-vpick="${j}" ${pk!=null?"disabled":""}><span class="bub" aria-pressed="${pk===j}">${L[j]}</span><span>${esc(x)}</span></button>`}).join("")}</div>
+ ${pk!=null?`<div class="explain${pk===q.a?"":" bad"}" id="vExp"><b>${pk===q.a?"정답":"오답 · 정답 ("+L[q.a]+")"}</b> <b>${esc(q.o.w)}</b> ${esc(q.o.pos)} ${esc(q.o.ko)}${q.o.pt?" — "+esc(q.o.pt):""}${q.k!=="b"&&q.o.ex?`<div class="vex">${esc(q.o.ex)} <span class="note">${esc(q.o.exk)}</span></div>`:""}${q.k==="b"&&q.o.exk?`<div class="note">${esc(q.o.exk)}</div>`:""}</div>
+  <div class="actbar"><div class="in"><button class="btn" id="vNext">${t.i+1<t.qs.length?"다음 ("+(t.i+2)+"/"+t.qs.length+")":"결과 보기"}</button></div></div>`:""}</div>`;
+ if(pk!=null&&window.innerWidth<=640&&VV.scroll){VV.scroll=false;const e=$("#vExp");if(e)e.scrollIntoView({block:"center"})}
+}
+function vStartTest(words,title){
+ const pool=VV.day>0?vDayWords(VV.day):VW;
+ VV.test={qs:vBuildTest(words,pool.length>=8?pool:VW,20),i:0,ans:[],title,words};VV.mode="test";
+ document.body.classList.add("running");renderVoca();window.scrollTo(0,0);
+}
+function vExit(){VV.mode=null;VV.card=null;VV.test=null;document.body.classList.remove("running");renderVoca();window.scrollTo(0,0)}
+$("#v-voca").addEventListener("click",e=>{
+ const b=e.target.closest("button");
+ const rv=e.target.closest("[data-reveal]");if(rv&&rv.classList.contains("hid")){rv.classList.remove("hid");return}
+ if(!b)return;
+ if(b.dataset.say){speakWord(b.dataset.say);return}
+ if(b.dataset.vday!=null){VV.day=+b.dataset.vday;VV.view="day";renderVoca();window.scrollTo(0,0);return}
+ if(b.id==="vBack"){VV.view="list";renderVoca();window.scrollTo(0,0);return}
+ if(b.id==="vHide"){VV.hide=!VV.hide;renderVoca();return}
+ if(b.id==="vDueTest"){VV.day=-1;vStartTest(vDue().slice(0,20),"복습 테스트");return}
+ if(b.id==="vCard"){const ws=vDayWords(VV.day);const order=ws.filter(o=>!vMastered(o.id)).concat(ws.filter(o=>vMastered(o.id)));VV.card={ids:order.map(o=>o.id),i:0,k:0,flip:false};VV.mode="card";document.body.classList.add("running");renderVoca();window.scrollTo(0,0);return}
+ if(b.id==="vFlip"||b.closest("#vFlip")){VV.card.flip=!VV.card.flip;renderVoca();return}
+ if(b.id==="vKnow"||b.id==="vUnk"){const c=VV.card,o=VBYID[c.ids[c.i]];vRecord(o,b.id==="vKnow",null);if(b.id==="vKnow")c.k++;c.i++;c.flip=false;save();renderVoca();return}
+ if(b.id==="vTest"){const ws=vDayWords(VV.day>=0?VV.day:vCurrentDay());vStartTest(ws,(VV.day===0?"내 단어장":"DAY "+VV.day)+" 테스트");return}
+ if(b.dataset.vpick!=null){const t=VV.test;if(t.ans[t.i]!=null)return;const pk=+b.dataset.vpick,q=t.qs[t.i];t.ans[t.i]=pk;vRecord(q.o,pk===q.a,q.k);VV.scroll=true;save();renderVoca();return}
+ if(b.id==="vNext"){VV.test.i++;renderVoca();window.scrollTo(0,0);return}
+ if(b.id==="vRetry"){const t=VV.test,w=t.qs.filter((x,i)=>t.ans[i]!==x.a).map(x=>x.o);vStartTest(w.length?w:t.words,t.title);return}
+ if(b.id==="vExit"){vExit();return}
+ if(b.id==="mwAdd"){const w=$("#mwW").value.trim(),k=$("#mwK").value.trim();if(!w||!k){$("#mwMsg").textContent="단어와 뜻을 입력하세요";return}
+  S.myw.push({id:"m"+Date.now(),w,ko:k,ex:$("#mwE").value.trim(),syn:$("#mwS").value.trim(),pos:"",pt:""});vMyRebuild();save();renderVoca();return}
+ if(b.dataset.mwdel){if(b.dataset.sure!=="1"){b.dataset.sure="1";b.textContent="삭제 확인";return}S.myw=S.myw.filter(m=>m.id!==b.dataset.mwdel);delete S.vq[b.dataset.mwdel];vMyRebuild();save();renderVoca();return}
+});
+function vStatsHTML(){
+ const vl=S.vlog,last=vl.slice(-100),acc=last.length?Math.round(last.filter(x=>x.ok).length/last.length*100):null;
+ const per={};last.forEach(x=>{per[x.k]=per[x.k]||[0,0];per[x.k][1]++;if(x.ok)per[x.k][0]++});
+ const dayAcc=VDAYS.map(d=>{const ids=new Set(vDayWords(d.d).map(o=>o.id));const L3=vl.filter(x=>ids.has(x.id));return {d,n:L3.length,acc:L3.length?Math.round(L3.filter(x=>x.ok).length/L3.length*100):null}}).filter(x=>x.n>=5).sort((a,b)=>a.acc-b.acc).slice(0,3);
+ const weakW=Object.entries(S.vq).filter(([id,v])=>VBYID[id]&&v.n>=2).sort((a,b)=>a[1].c/a[1].n-b[1].c/b[1].n).slice(0,6);
+ return `<div class="card"><h2>단어 실력</h2><div class="tiles"><div><span class="lbl">학습한 단어</span><b class="mono">${Object.keys(S.vq).filter(id=>VBYID[id]).length}</b></div><div><span class="lbl">외운 단어</span><b class="mono">${VW.filter(o=>vMastered(o.id)).length}</b></div><div><span class="lbl">최근 정답률</span><b class="mono">${acc==null?"-":acc+"%"}</b></div><div><span class="lbl">오늘 복습</span><b class="mono">${vDue().length}</b></div></div>
+ ${Object.keys(per).length?`<div class="tbl"><table><thead><tr><th>문제 유형</th><th style="text-align:right">정답률 (최근 100)</th></tr></thead><tbody>${Object.entries(per).map(([k,v])=>`<tr><td>${VTYPE[k]}</td><td class="n">${Math.round(v[0]/v[1]*100)}% (${v[0]}/${v[1]})</td></tr>`).join("")}</tbody></table></div>`:`<p class="empty">단어 테스트를 풀면 유형별 정답률이 나옵니다.</p>`}
+ ${dayAcc.length?`<p class="note" style="margin:0">약한 DAY: ${dayAcc.map(x=>"DAY "+x.d.d+" "+esc(x.d.t)+" "+x.acc+"%").join(" · ")}</p>`:""}
+ ${weakW.length?`<p class="note" style="margin:0">자주 틀린 단어: ${weakW.map(([id,v])=>esc(VBYID[id].w)+"("+v.c+"/"+v.n+")").join(", ")}</p>`:""}</div>`;
+}
 /* ---------- mock test ---------- */
 S.mocks=S.mocks||[];
 const MOCK=[

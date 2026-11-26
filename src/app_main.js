@@ -31,8 +31,8 @@ NEWQ.forEach(q=>addQ(Object.assign({},q),"g","노트"));
 function normalize(r){
  const b=blankState();if(!r||typeof r!=="object")return b;
  const o=Object.assign(b,r);
- ["qs","days","wd"].forEach(k=>{if(!o[k]||typeof o[k]!=="object"||Array.isArray(o[k]))o[k]={}});
- ["log","unk","adapt","mocks","scores"].forEach(k=>{if(!Array.isArray(o[k]))o[k]=[]});
+ ["qs","days","wd","vq"].forEach(k=>{if(!o[k]||typeof o[k]!=="object"||Array.isArray(o[k]))o[k]={}});
+ ["log","unk","adapt","mocks","scores","vlog","myw"].forEach(k=>{if(!Array.isArray(o[k]))o[k]=[]});
  o.settings=Object.assign(blankState().settings,o.settings||{});
  if(![10,15,20].includes(+o.settings.size))o.settings.size=15;
  if(!/^\d{4}-\d{2}-\d{2}$/.test(o.exam))o.exam="2026-12-27";
@@ -51,6 +51,7 @@ function migrateV1(){
 }
 function selfCheck(){
  const issues=[];let fixed=0;
+ if(typeof vMyRebuild==="function"){vMyRebuild();VBROKEN.forEach(id=>issues.push("단어 "+id+" 제외: 형식 오류"));Object.keys(S.vq).forEach(id=>{if(!VBYID[id]){delete S.vq[id];fixed++}});if(S.vlog.length>800)S.vlog=S.vlog.slice(-800)}
  BROKEN.forEach(b=>issues.push("문제 "+b.id+" ("+b.src+") 제외: "+b.why));
  Object.keys(S.qs).forEach(id=>{const v=S.qs[id];
   if(!BYID[id]){delete S.qs[id];fixed++;return}
@@ -69,7 +70,7 @@ function selfCheck(){
   if(!S.cur.items.length||S.cur.d!==TODAY&&S.cur.stage!=="done"&&S.cur.i===0){S.cur=null}}
  Object.keys(S.days).forEach(d=>{const x=S.days[d];if(!x||typeof x!=="object"||!/^\d{4}-\d{2}-\d{2}$/.test(d)){delete S.days[d];fixed++}});
  if(!LOCAL_OK)issues.push("이 브라우저는 기기 저장이 막혀 있음 (클라우드 저장만 사용)");
- S.health={d:TODAY,ts:Date.now(),ver:APP_VER,issues,fixed,bank:{grammar:BANK.length,lc:LCB.length,rc:RCB.length,extra:EXTRA,broken:BROKEN.length}};
+ S.health={d:TODAY,ts:Date.now(),ver:APP_VER,issues,fixed,bank:{grammar:BANK.length,lc:LCB.length,rc:RCB.length,extra:EXTRA,broken:BROKEN.length,voca:typeof VW!=="undefined"?VW.length:0}};
  return S.health;
 }
 
@@ -123,6 +124,9 @@ function mergeStates(a,b){
  m.mocks=uni(O.mocks,m.mocks,e=>JSON.stringify(e));
  m.scores=uni(O.scores,m.scores,e=>e.d+"|"+e.lc+"|"+e.rc).sort((x,y)=>x.d<y.d?-1:1);
  m.wpos=Math.max(O.wpos||0,m.wpos||0);
+ Object.entries(O.vq).forEach(([id,v])=>{const w=m.vq[id];if(!w||(v.n||0)>(w.n||0))m.vq[id]=v});
+ m.vlog=uni(O.vlog,m.vlog,e=>e.t+"|"+e.id+"|"+e.k).sort((x,y)=>x.t-y.t).slice(-800);
+ m.myw=uni(O.myw,m.myw,e=>e.id);
  m.updatedAt=Math.max(a.updatedAt||0,b.updatedAt||0);
  return m;
 }
@@ -261,9 +265,9 @@ function buildSession(opt){
   rankPool(LCB.filter(q=>!used.has(q.id))).slice(0,2).forEach(q=>take(q,"듣기"));
   if(hasRC){const px=rankPool(RCB)[0];if(px)RCB.filter(q=>q.px===px.px).slice(0,2).forEach(q=>take(q,"독해"))}
  }
- const wds=[];const dueW=WORDS.filter(w=>S.wd[w[0]]&&!S.wd[w[0]].k&&S.wd[w[0]].due<=TODAY);
- dueW.slice(0,p.words).forEach(w=>wds.push(w[0]));
- let wp=S.wpos||0,g=0;while(wds.length<p.words&&g++<WORDS.length){const w=WORDS[wp%WORDS.length][0];wp++;if(!S.wd[w]&&!wds.includes(w))wds.push(w)}
+ const wds=vDue().slice(0,p.words).map(o=>o.id);let wp=S.wpos||0;
+ const cd=vCurrentDay();vDayWords(cd).filter(o=>!S.vq[o.id]).forEach(o=>{if(wds.length<p.words&&!wds.includes(o.id))wds.push(o.id)});
+ VW.filter(o=>o.day>0&&!S.vq[o.id]).forEach(o=>{if(wds.length<p.words&&!wds.includes(o.id))wds.push(o.id)});
  return {d:TODAY,kind:opt.unit?"unit":"daily",unit:opt.unit||p.focus,why:opt.unit?"직접 고른 단원":p.why,items,i:0,stage:(opt.unit||p.lessonFirst)?"lesson":"q",ans:{},sl:{},err:{},ms:{},retried:{},words:opt.unit?[]:wds,wi:0,wk:0,flip:false,t0:Date.now(),speed:p.speed,slot:p.slot,wpos:wp};
 }
 
@@ -283,7 +287,7 @@ function setErr(qid,err){for(let i=S.log.length-1;i>=0;i--){if(S.log[i].id===qid
 
 /* ===================== 화면: 공통 ===================== */
 function show(v){document.body.classList.toggle("running",v==="run"&&!!S.cur&&S.cur.stage!=="done");document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===v||(v==="run"&&b.dataset.v==="home")));document.querySelectorAll(".view").forEach(s=>s.hidden=s.id!=="v-"+v);try{sessionStorage.setItem("tab2",v)}catch(e){}window.scrollTo(0,0);
- if(v==="stats")renderStats();if(v==="notes")renderNotes();if(v==="set")renderSet();if(v==="home")renderHome();if(v==="run")renderRun()}
+ if(v==="stats")renderStats();if(v==="voca")renderVoca();if(v==="notes")renderNotes();if(v==="set")renderSet();if(v==="home")renderHome();if(v==="run")renderRun()}
 document.querySelector("nav").addEventListener("click",e=>{const b=e.target.closest("button");if(b)show(b.dataset.v)});
 function chip(m){const l=lvl(m);return `<span class="lv ${l[1]}">${l[0]}${m!=null?" "+m+"%":""}</span>`}
 function streak(){let n=0,d=TODAY;if(!S.days[d])d=addDays(d,-1);while(S.days[d]&&S.days[d].n>0){n++;d=addDays(d,-1)}return n}
@@ -311,6 +315,7 @@ function renderHome(){
  <div class="card"><div class="row" style="justify-content:space-between"><h2>프로그램이 바꾼 것</h2><button class="btn small ghost" data-go="stats">분석 보기</button></div>
   ${recent.length?`<ul class="alog">${recent.map(a=>`<li><span class="mono note">${a.d.slice(5).replace("-","/")}</span> ${esc(a.m)}</li>`).join("")}</ul>`:`<p class="empty">세션을 풀면 기록을 분석해서 다음 세션 구성을 스스로 바꿉니다. 바뀐 내용이 여기에 쌓여요.</p>`}
  </div>
+ <div class="card"><div class="row" style="justify-content:space-between"><h2>단어</h2><button class="btn small" data-go="voca">단어장 열기</button></div><p class="note" style="margin:0">DAY ${vCurrentDay()} 진행 중 · 외운 단어 ${VW.filter(o=>o.day>0&&vMastered(o.id)).length}/${VW.filter(o=>o.day>0).length} · 오늘 복습 ${vDue().length}개</p></div>
  <div class="card"><h2>약점 TOP 3</h2>${weakList(3)}</div>`;
 }
 function weakList(k){
@@ -346,9 +351,9 @@ function renderRun(){
   <div class="sbar">${c.items.map((it,i)=>`<i class="${i<c.i?(c.ans[i]===BYID[it.id].a?"d":"x"):i===c.i&&c.stage==="q"?"c":""}"></i>`).join("")}</div></div>`;
  if(c.stage==="lesson"){A.innerHTML=top+noteHTML(c.unit,true)+`<div class="actbar"><div class="in"><button class="btn" id="rLessonDone">노트 확인 → 문제 시작</button></div></div>`;return}
  if(c.stage==="words"){
-  const w=c.words[c.wi],W=WORDS.find(x=>x[0]===w);
-  if(!W){A.innerHTML=top+`<div class="card"><h2>단어 완료</h2><p style="margin:0">알아요 ${c.wk} / ${c.words.length}</p><div class="actbar"><div class="in"><button class="btn" id="rFinish">결과 보기</button></div></div></div>`;return}
-  A.innerHTML=top+`<div class="card"><div class="row" style="justify-content:space-between"><h2>단어</h2><span class="mono note">${c.wi+1} / ${c.words.length}</span></div><button class="flash" id="rFlip"><div><div class="en">${esc(W[0])}</div>${c.flip?`<div class="ko">${esc(W[1])}</div>`:`<div class="note">탭해서 뜻 보기</div>`}</div></button><div class="actbar"><div class="in"><button class="btn ghost" id="rUnk">몰라요</button><button class="btn" id="rKnow">알아요</button></div></div></div>`;return}
+  const o=VBYID[c.words[c.wi]];
+  if(!o){A.innerHTML=top+`<div class="card"><h2>단어 완료</h2><p style="margin:0">알아요 ${c.wk} / ${c.words.length}</p><div class="actbar"><div class="in"><button class="btn" id="rFinish">결과 보기</button></div></div></div>`;return}
+  A.innerHTML=top+`<div class="card"><div class="row" style="justify-content:space-between"><h2>단어</h2><span class="mono note">${c.wi+1} / ${c.words.length}</span></div><button class="flash vflash" id="rFlip"><div><div class="en">${esc(o.w)}</div><div class="note">DAY ${o.day} · ${esc(o.pos)}</div>${c.flip?`<div class="ko">${esc(o.ko)}</div>${o.pt?`<div class="vpt">${esc(o.pt)}</div>`:""}${o.ex?`<div class="vex">${esc(o.ex)}<br><span class="note">${esc(o.exk)}</span></div>`:""}`:`<div class="note">탭해서 뜻 보기</div>`}</div></button><div class="actbar"><div class="in"><button class="btn ghost" id="rUnk">몰라요</button><button class="btn" id="rKnow">알아요</button></div></div></div>`;return}
  if(c.stage==="done"){document.body.classList.remove("running");A.innerHTML=top+resultHTML();return}
  const q=curQ(),it=c.items[c.i],i=c.i,pk=c.ans[i],needSlot=q.kind==="g"&&c.slot&&q.r&&c.sl[i]==null&&!it.rt;
  const qu=q.kind==="g"?UID[q.u]:null;
@@ -393,9 +398,8 @@ $("#v-run").addEventListener("click",e=>{
  if(b.id==="rLessonDone"){c.stage="q";save();renderRun();window.scrollTo(0,0);return}
  if(b.id==="rNext"){c.scr=false;if(c.i+1<c.items.length){c.i++}else{c.stage=c.words.length?"words":"done";if(c.stage==="done")finishRun()}save();renderRun();window.scrollTo(0,0);return}
  if(b.id==="rFlip"||b.closest("#rFlip")){c.flip=!c.flip;renderRun();return}
- if(b.id==="rKnow"||b.id==="rUnk"){const w=c.words[c.wi];
-  if(b.id==="rKnow"){c.wk++;S.wd[w]={k:1,due:addDays(TODAY,14)};S.unk=S.unk.filter(x=>x!==w)}
-  else{S.wd[w]={k:0,due:addDays(TODAY,1)};if(!S.unk.includes(w))S.unk.push(w)}
+ if(b.id==="rKnow"||b.id==="rUnk"){const o=VBYID[c.words[c.wi]];
+  if(o)vRecord(o,b.id==="rKnow",null);if(b.id==="rKnow")c.wk++;
   c.wi++;c.flip=false;save();renderRun();return}
  if(b.id==="rFinish"){c.stage="done";finishRun();save();renderRun();return}
  if(b.id==="rAgain"){startRun();return}
@@ -453,6 +457,7 @@ function renderStats(){
   <div><span class="lbl">정답 평균 시간</span><b class="mono">${avg==null?"-":avg+"초"}</b></div>
   <div><span class="lbl">연속 학습</span><b class="mono">${streak()}일</b></div></div>
   <p class="note" style="margin:0">Part 5 예상 정답: ${acc==null?"기록 부족":"약 "+Math.round(acc*0.3)+" / 30 (추정: 최근 정답률 × 30)"} · 목표는 문항당 20초 이내</p></div>`;
+ h+=vStatsHTML();
  h+=`<div class="card"><h2>단원별 실력</h2><p class="note" style="margin:0">최근 20문제 기준, 최근 것일수록 크게 반영. 3문제 미만은 미학습.</p><div class="bars">${UNITS.map(u=>{const s=unitStat(u.id),l=lvl(s.m);return `<button class="brow" data-unit="${u.id}"><span class="bn">${esc(u.n)}</span><span class="bt"><i class="${l[1]}" style="width:${s.m||0}%"></i></span><span class="bv mono">${s.m==null?"-":s.m+"%"}</span></button>`}).join("")}</div></div>`;
  h+=`<div class="card chart"><h2>최근 14일</h2>${trendSVG()}</div>`;
  const slotRows=SLOTS.map(s=>{const L2=S.log.filter(x=>(x.sl===0||x.sl===1)&&BYID[x.id]&&BYID[x.id].r===s[0]);return [s,L2.length,L2.length?Math.round(L2.filter(x=>x.sl).length/L2.length*100):null]});
@@ -490,7 +495,18 @@ function renderStrat(){
   <li><b>어휘 문제 → 짝 단어</b><span>앞뒤 단어와 짝(comply with, take effect)부터. 모르면 10초 안에 찍고 표시.</span></li>
  </ol>
  <div class="tbl"><table><thead><tr><th>파트</th><th style="text-align:right">목표 시간</th></tr></thead><tbody><tr><td>Part 5 (30문항)</td><td class="n">10분</td></tr><tr><td>Part 6 (16문항)</td><td class="n">8분</td></tr><tr><td>Part 7 (54문항)</td><td class="n">55분</td></tr></tbody></table></div>
- <p class="note" style="margin:0">준비물: 신분증 · 연필 · 지우개 · 아날로그 시계. 전자기기 반입 제한.</p></div>`;
+ <p class="note" style="margin:0">준비물: 신분증 · 연필 · 지우개 · 아날로그 시계. 전자기기 반입 제한.</p></div>
+ <div class="card"><h2>Part 6·7 질문 유형별 전략</h2><div class="tbl"><table><thead><tr><th>유형</th><th>질문 모양</th><th>푸는 법</th></tr></thead><tbody>
+  <tr><td>Part 6 단어·문법</td><td>빈칸 1개 + 보기 4개</td><td>Part 5처럼 자리 판단. 단, 시제·대명사는 앞뒤 문장까지 확인</td></tr>
+  <tr><td>Part 6 문장 고르기</td><td>빈칸에 들어갈 문장</td><td>빈칸 앞뒤 문장의 지시어(this, they)·연결어(however)와 이어지는 것</td></tr>
+  <tr><td>주제·목적</td><td>What is the purpose of ~?</td><td>첫 2~3문장. 마지막 단락의 요청도 확인</td></tr>
+  <tr><td>육하원칙</td><td>When / Where / What ~?</td><td>질문 키워드를 지문에서 찾고 그 문장만 읽기</td></tr>
+  <tr><td>NOT·True</td><td>What is (NOT) mentioned/true?</td><td>보기 4개를 지문과 하나씩 대조해 지우기</td></tr>
+  <tr><td>추론</td><td>What is suggested / most likely?</td><td>지문 근거 + 한 단계만 추론. 지나친 확대 해석 X</td></tr>
+  <tr><td>의도 파악</td><td>What does X mean when he writes "~"?</td><td>바로 앞 메시지에 대한 반응으로 해석</td></tr>
+  <tr><td>문장 위치</td><td>[1]~[4] 중 문장이 들어갈 곳</td><td>주어진 문장의 대명사·연결어가 가리킬 대상이 바로 앞에 있는 곳</td></tr>
+  <tr><td>동의어</td><td>"X" is closest in meaning to</td><td>사전 뜻이 아니라 문맥 뜻으로. 단어장의 'Part 7 동의어' 테스트로 연습</td></tr>
+ </tbody></table></div></div>`;
 }
 
 /* ===================== 설정 · 자가 점검 ===================== */
@@ -548,7 +564,7 @@ $("#v-set").addEventListener("click",async e=>{
   const keep={exam:S.exam,scores:S.scores,mocks:S.mocks};S=normalize(Object.assign(blankState(),keep));adaptLog("기록 초기화");selfCheck();save();renderAll();return}
 });
 
-function renderAll(){renderHome();renderStrat();renderNotes();if(!$("#v-stats").hidden)renderStats();if(!$("#v-set").hidden)renderSet();if(!$("#v-run").hidden)renderRun();try{renderMock();renderLog()}catch(e){}renderSync()}
+function renderAll(){if(typeof vMyRebuild==="function")vMyRebuild();renderVoca();renderHome();renderStrat();renderNotes();if(!$("#v-stats").hidden)renderStats();if(!$("#v-set").hidden)renderSet();if(!$("#v-run").hidden)renderRun();try{renderMock();renderLog()}catch(e){}renderSync()}
 
 document.addEventListener("keydown",e=>{
  if($("#v-run").hidden||!S.cur||e.target.closest("input,textarea,select")||e.metaKey||e.ctrlKey||e.altKey)return;

@@ -10,7 +10,7 @@ const today=new Date();today.setHours(0,0,0,0);
 const TODAY=iso(today);
 const L="ABCD";
 function blankState(){return {v:2,updatedAt:0,created:Date.now(),exam:"2026-12-27",start:TODAY,qs:{},log:[],days:{},unk:[],wpos:0,wd:{},
- settings:{size:15,slot:"auto",speed:"auto"},plan:null,adapt:[],mocks:[],scores:[],cur:null,health:null,migrated:false}}
+ settings:{size:15,slot:"auto",speed:"auto"},plan:null,adapt:[],mocks:[],scores:[],cur:null,health:null,migrated:false,vq:{},vlog:[],myw:[]}}
 function readLocal(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}}
 let S=blankState();
 let LOCAL_OK=true;
