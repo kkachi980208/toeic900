@@ -93,7 +93,7 @@ function renderVoca(){
   <div class="big">DAY ${cur} · ${esc((VDAYS.find(x=>x.d===cur)||{}).t||"")}</div>
   <p class="note" style="margin:0">주제별 30일 구성 · 단어마다 뜻·출제포인트·예문·유의어 · 테스트는 뜻 고르기 / 단어 고르기 / Part 5 어휘 빈칸 / Part 7 동의어${acc!=null?" · 최근 정답률 "+acc+"%":""}</p>
   <div class="row"><button class="btn" data-vday="${cur}">DAY ${cur} 공부하기</button>${due.length?`<button class="btn ghost" id="vDueTest">복습 테스트 (${Math.min(due.length,20)})</button>`:""}</div></div>
- <div class="card"><h2>30일 단어장</h2><p class="note" style="margin:0">초록 = 외운 단어 비율(연속 3번 이상 맞힘)</p><div class="vgrid">${VDAYS.map(d=>{const c=vDayChip(d.d);return `<button class="vtile${d.d===cur?" cur":""}" data-vday="${d.d}"><span class="mono">DAY ${String(d.d).padStart(2,"0")}</span><b>${esc(d.t)}</b><span class="vbar"><i style="width:${c.n?Math.round(c.m/c.n*100):0}%"></i></span><span class="note mono">${c.m}/${c.n}</span></button>`}).join("")}
+ <div class="card"><h2>30일 단어장</h2><p class="note" style="margin:0">초록 = 외운 단어 비율(연속 3번 이상 맞힘)</p><div class="vgrid">${VDAYS.map(d=>{const c=vDayChip(d.d);return `<button class="vtile${d.d===cur?" cur":""}" data-vday="${d.d}"><span class="mono">${d.d>30?"VIDEO":"DAY "+String(d.d).padStart(2,"0")}</span><b>${esc(d.t)}</b><span class="vbar"><i style="width:${c.n?Math.round(c.m/c.n*100):0}%"></i></span><span class="note mono">${c.m}/${c.n}</span></button>`}).join("")}
   <button class="vtile my" data-vday="0"><span class="mono">MY</span><b>내 단어장</b><span class="note">책에서 직접 추가</span><span class="note mono">${vDayWords(0).length}개</span></button></div></div>`;
 }
 function renderVDay(A){

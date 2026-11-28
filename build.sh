@@ -9,7 +9,7 @@ cd "$(dirname "$0")"
   cat src/body.html
   echo "<script>"
   echo "(function(){"
-  cat src/app_head.js src/data_old.js src/data_units.js src/data_voca.js src/data_voca2.js src/app_main.js src/voca.js src/mock.js src/log.js src/init.js
+  cat src/app_head.js src/data_old.js src/data_units.js src/data_voca.js src/data_voca2.js src/data_voca3.js src/app_main.js src/voca.js src/mock.js src/log.js src/init.js
   echo "})();"
   echo "</script>"
   cat src/site_tail.html

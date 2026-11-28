@@ -1378,6 +1378,30 @@ VOCA.push(
 ["benefit","v","이익을 주다","benefit from ~ ~로 이익을 얻다","The new park will benefit residents.","새 공원은 주민에게 도움이 될 것이다.","help"],
 ["outreach","n","봉사 활동","community outreach 지역 봉사","The company runs a community outreach program.","회사는 지역 봉사 프로그램을 운영한다.","service"]]}
 );
+/* ===== 영상 필수 표현 (사용자가 정리한 목록 기반, 예문·출제포인트는 자체 작성) ===== */
+VOCA.push({d:31,t:"영상 필수 표현",w:[
+["application form","n","지원서","fill out an application form 지원서를 작성하다","Please fill out the application form online.","지원서를 온라인으로 작성해 주세요.","job application"],
+["career","n","경력, 직업","career fair / career change","She started her career in sales.","그녀는 영업 분야에서 경력을 시작했다.","profession"],
+["job fair","n","취업 박람회","= career fair / attend a job fair","Many companies set up booths at the job fair.","많은 회사가 취업 박람회에 부스를 차렸다.","career fair"],
+["job offer","n","일자리 제안","accept / decline a job offer","He decided to accept the job offer.","그는 일자리 제안을 받아들이기로 했다.","employment offer"],
+["full-time work","n","정규직 근무","↔ part-time work 시간제 근무","She is looking for full-time work.","그녀는 정규직 일자리를 찾고 있다.","permanent job"],
+["job opportunity","n","취업 기회","job opportunities in ~ ~ 분야의 일자리","The new factory will create job opportunities.","새 공장이 일자리를 만들 것이다.","opening"],
+["hiring committee","n","채용 위원회","committee는 단수 취급 (The committee is ~)","The hiring committee will meet on Friday.","채용 위원회는 금요일에 모인다.","selection panel"],
+["business card","n","명함","exchange business cards 명함을 교환하다","They exchanged business cards after the meeting.","그들은 회의 후 명함을 교환했다.",""],
+["laptop","n","노트북 컴퓨터","Part 1 빈출: A laptop is open on the desk.","A laptop has been left on the table.","노트북이 탁자 위에 놓여 있다.","notebook computer"],
+["name tag","n","이름표","wear a name tag 이름표를 달다","All visitors must wear a name tag.","모든 방문객은 이름표를 달아야 한다.","badge"],
+["bulletin board","n","게시판","post a notice on the bulletin board","A notice has been posted on the bulletin board.","게시판에 공지가 붙어 있다.","notice board"],
+["handwriting","n","손글씨, 필체","필기체(cursive)와는 다른 말","Your handwriting is hard to read, so please type it.","손글씨를 알아보기 어려우니 타자로 쳐 주세요.",""],
+["keypad","n","숫자 버튼판","enter a code on the keypad","Enter the code on the keypad to open the door.","숫자 버튼판에 코드를 입력하면 문이 열린다.",""],
+["filing cabinet","n","서류 보관함","Part 1 빈출: drawers of a filing cabinet","The drawers of the filing cabinet are open.","서류 보관함 서랍이 열려 있다.","file cabinet"],
+["airport","n","공항","airport shuttle 공항 셔틀","A shuttle runs between the hotel and the airport.","호텔과 공항 사이에 셔틀이 다닌다.",""],
+["airfare","n","항공 요금","fare 교통 요금 ↔ fee 수수료 구분","Airfare is included in the package price.","항공 요금은 패키지 가격에 포함된다.","plane fare"],
+["board a flight","v","비행기에 탑승하다","board는 타동사 (board on X)","Passengers can board the flight 30 minutes before departure.","승객은 출발 30분 전부터 탑승할 수 있다.","get on a plane"],
+["boarding gate","n","탑승구","proceed to the boarding gate 탑승구로 가다","Please proceed to boarding gate 12.","12번 탑승구로 가 주세요.","gate"],
+["boarding pass","n","탑승권","show your boarding pass 탑승권을 보여주다","Please have your boarding pass ready.","탑승권을 준비해 주세요.",""],
+["around the world","adv","전 세계에(서)","customers around the world 전 세계 고객","Our products are sold around the world.","우리 제품은 전 세계에서 판매된다.","worldwide"],
+["advertising campaign","n","광고 캠페인","launch an advertising campaign 광고 캠페인을 시작하다","The advertising campaign boosted sales.","광고 캠페인으로 매출이 늘었다.","promotion"],
+["customer survey","n","고객 설문조사","conduct a customer survey 고객 설문조사를 하다","We conducted a customer survey last month.","지난달 고객 설문조사를 했다.","customer poll"]]});
 /* ===================== 문제 은행 ===================== */
 const BANK=[],LCB=[],RCB=[],BYID={},BROKEN=[];let EXTRA=0;
 const UID={};UNITS.forEach((u,i)=>{UID[u.id]=u;u.ix=i});
@@ -2051,7 +2075,7 @@ function renderVoca(){
   <div class="big">DAY ${cur} · ${esc((VDAYS.find(x=>x.d===cur)||{}).t||"")}</div>
   <p class="note" style="margin:0">주제별 30일 구성 · 단어마다 뜻·출제포인트·예문·유의어 · 테스트는 뜻 고르기 / 단어 고르기 / Part 5 어휘 빈칸 / Part 7 동의어${acc!=null?" · 최근 정답률 "+acc+"%":""}</p>
   <div class="row"><button class="btn" data-vday="${cur}">DAY ${cur} 공부하기</button>${due.length?`<button class="btn ghost" id="vDueTest">복습 테스트 (${Math.min(due.length,20)})</button>`:""}</div></div>
- <div class="card"><h2>30일 단어장</h2><p class="note" style="margin:0">초록 = 외운 단어 비율(연속 3번 이상 맞힘)</p><div class="vgrid">${VDAYS.map(d=>{const c=vDayChip(d.d);return `<button class="vtile${d.d===cur?" cur":""}" data-vday="${d.d}"><span class="mono">DAY ${String(d.d).padStart(2,"0")}</span><b>${esc(d.t)}</b><span class="vbar"><i style="width:${c.n?Math.round(c.m/c.n*100):0}%"></i></span><span class="note mono">${c.m}/${c.n}</span></button>`}).join("")}
+ <div class="card"><h2>30일 단어장</h2><p class="note" style="margin:0">초록 = 외운 단어 비율(연속 3번 이상 맞힘)</p><div class="vgrid">${VDAYS.map(d=>{const c=vDayChip(d.d);return `<button class="vtile${d.d===cur?" cur":""}" data-vday="${d.d}"><span class="mono">${d.d>30?"VIDEO":"DAY "+String(d.d).padStart(2,"0")}</span><b>${esc(d.t)}</b><span class="vbar"><i style="width:${c.n?Math.round(c.m/c.n*100):0}%"></i></span><span class="note mono">${c.m}/${c.n}</span></button>`}).join("")}
   <button class="vtile my" data-vday="0"><span class="mono">MY</span><b>내 단어장</b><span class="note">책에서 직접 추가</span><span class="note mono">${vDayWords(0).length}개</span></button></div></div>`;
 }
 function renderVDay(A){
